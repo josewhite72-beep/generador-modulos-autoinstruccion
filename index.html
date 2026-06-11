@@ -453,6 +453,20 @@ if(typeof pdfjsLib!=='undefined'){
   pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 
+// Restore saved API selection and key from localStorage
+(function(){
+  const savedApi=localStorage.getItem('gema_api');
+  const savedKey=localStorage.getItem('gema_key');
+  if(savedApi){
+    state.api=savedApi;
+    document.getElementById('pill-groq').classList.toggle('active',savedApi==='groq');
+    document.getElementById('pill-deepseek').classList.toggle('active',savedApi==='deepseek');
+  }
+  if(savedKey){
+    document.getElementById('apiKeyInput').value=savedKey;
+  }
+})();
+
 const state={
   api:'groq',apiKey:'',
   fileName:'',fileSize:'',extractedText:'',
@@ -464,6 +478,7 @@ function setApi(api){
   state.api=api;
   document.getElementById('pill-groq').classList.toggle('active',api==='groq');
   document.getElementById('pill-deepseek').classList.toggle('active',api==='deepseek');
+  localStorage.setItem('gema_api',api);
 }
 
 const fileInput=document.getElementById('fileInput');
@@ -481,7 +496,7 @@ async function handleFile(file){
     setTimeout(()=>{uploadZone.style.borderColor='var(--border)';},1500);
     return;
   }
-  state.apiKey=key;state.fileName=file.name;state.fileSize=(file.size/1024).toFixed(0)+' KB';
+  state.apiKey=key;localStorage.setItem('gema_key',key);state.fileName=file.name;state.fileSize=(file.size/1024).toFixed(0)+' KB';
   showOnly('screenProcessing');updateProgress(10);
   try{
     let text='';
@@ -645,6 +660,8 @@ function buildSummary(){
 
 async function startGeneration(){
   if(state.formatos.length===0){showToast('⚠️ Selecciona al menos un formato');goTo(3);return;}
+  const k=document.getElementById('apiKeyInput').value.trim();
+  if(k){state.apiKey=k;localStorage.setItem('gema_key',k);}
   state.fields={
     escuela:document.getElementById('f_escuela').value,
     region:document.getElementById('f_region').value,
@@ -668,6 +685,7 @@ async function startGeneration(){
   }
 }
 
+const GEN_MSGS=['Preparando portada…','Diseñando presentación…','Creando saberes previos…','Redactando contenido…','Generando actividades…','Construyendo rúbrica analítica…','Preparando autoevaluación…','Compilando glosario y recursos…'];
 function setGenStep(idx,status){
   const el=document.getElementById('gs'+idx);if(!el)return;
   el.classList.remove('done','active');
@@ -1232,7 +1250,7 @@ function resetAll(){
   state.generatedSections={};state.fields={};state.extractedText='';
   state.fileName='';state.fileSize='';
   document.getElementById('fileInput').value='';
-  document.getElementById('apiKeyInput').value='';
+  // API key preserved in localStorage — not cleared on reset
   document.getElementById('fileChipArea').innerHTML='';
   document.getElementById('indicadoresList').innerHTML='';
   document.getElementById('modulePreview').innerHTML='';
