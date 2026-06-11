@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#1a1a2e"/>
+<title>GeMA — Generador de Módulos de Autoinstrucción</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Inter:wght@400;500;600&display=swap');
+:root{
+  --ink:#0f0f1a;--paper:#f7f6f2;--muted:#6b6b80;--accent:#4f46e5;--accent2:#06b6d4;
+  --success:#10b981;--warn:#f59e0b;--danger:#ef4444;--surface:#fff;--border:#e2e1dc;
+  --radius:14px;--shadow:0 4px 24px rgba(15,15,26,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;display:flex;flex-direction:column;}
+header{background:var(--ink);padding:18px 24px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;}
+.logo-mark{width:44px;height:44px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-weight:800;font-size:18px;color:#fff;letter-spacing:-1px;flex-shrink:0;}
+.logo-text{display:flex;flex-direction:column;line-height:1;}
+.logo-text strong{font-family:'Sora',sans-serif;font-weight:800;font-size:20px;color:#fff;letter-spacing:-0.5px;}
+.logo-text span{font-size:10px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:1.5px;margin-top:3px;}
+.header-badge{margin-left:auto;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);font-size:11px;padding:4px 10px;border-radius:20px;letter-spacing:0.5px;}
+.progress-track{background:rgba(255,255,255,.06);height:3px;}
+.progress-fill{height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .5s ease;}
+.steps-bar{display:flex;justify-content:center;gap:0;padding:20px 24px 0;}
+.step-item{display:flex;align-items:center;}
+.step-dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--muted);transition:all .3s;flex-shrink:0;position:relative;z-index:1;}
+.step-dot.active{border-color:var(--accent);background:var(--accent);color:#fff;}
+.step-dot.done{border-color:var(--success);background:var(--success);color:#fff;}
+.step-label{font-size:10px;color:var(--muted);white-space:nowrap;margin:0 6px;}
+.step-label.active{color:var(--accent);font-weight:600;}
+.step-line{width:32px;height:2px;background:var(--border);flex-shrink:0;}
+.step-line.done{background:var(--success);}
+main{flex:1;max-width:720px;width:100%;margin:0 auto;padding:28px 20px 60px;}
+.screen{display:none;}
+.screen.active{display:block;animation:fadeUp .35s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+
+.hero-title{font-family:'Sora',sans-serif;font-size:28px;font-weight:800;line-height:1.2;margin-bottom:8px;}
+.hero-title em{font-style:normal;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{color:var(--muted);font-size:15px;line-height:1.6;margin-bottom:32px;}
+
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);background:var(--surface);padding:48px 24px;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--accent);background:rgba(79,70,229,.04);}
+.upload-icon{font-size:48px;margin-bottom:16px;display:block;}
+.upload-title{font-family:'Sora',sans-serif;font-weight:700;font-size:17px;margin-bottom:8px;}
+.upload-hint{color:var(--muted);font-size:13px;margin-bottom:20px;}
+.upload-formats{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;}
+.fmt-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid;}
+.fmt-badge.pdf{color:#dc2626;border-color:#fca5a5;background:#fef2f2;}
+.fmt-badge.word{color:#1d4ed8;border-color:#93c5fd;background:#eff6ff;}
+#fileInput{display:none;}
+.divider-or{display:flex;align-items:center;gap:16px;margin:24px 0;color:var(--muted);font-size:13px;}
+.divider-or::before,.divider-or::after{content:'';flex:1;height:1px;background:var(--border);}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#6366f1);color:#fff;box-shadow:0 4px 12px rgba(79,70,229,.35);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(79,70,229,.45);}
+.btn-primary:disabled{opacity:.5;pointer-events:none;}
+.btn-secondary{background:var(--surface);color:var(--ink);border:1.5px solid var(--border);}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+.btn-success{background:linear-gradient(135deg,var(--success),#059669);color:#fff;box-shadow:0 4px 12px rgba(16,185,129,.3);}
+.btn-success:hover{transform:translateY(-1px);}
+.btn-full{width:100%;}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--ink);}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+
+.processing-card{background:var(--surface);border-radius:var(--radius);padding:40px 24px;text-align:center;box-shadow:var(--shadow);}
+.spinner{width:52px;height:52px;border:4px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.processing-msg{font-family:'Sora',sans-serif;font-weight:700;font-size:16px;margin-bottom:6px;}
+.processing-sub{color:var(--muted);font-size:13px;}
+.processing-steps{margin-top:24px;display:flex;flex-direction:column;gap:8px;text-align:left;}
+.proc-step{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);padding:8px 12px;border-radius:8px;background:var(--paper);}
+.proc-step.done{color:var(--success);}
+.proc-step.active{color:var(--accent);font-weight:600;background:rgba(79,70,229,.06);}
+.proc-step-icon{font-size:16px;flex-shrink:0;}
+
+.file-chip{display:flex;align-items:center;gap:12px;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:20px;}
+.file-chip-icon{font-size:24px;}
+.file-chip-name{font-weight:600;font-size:14px;flex:1;}
+.file-chip-size{color:var(--muted);font-size:12px;}
+
+.section-card{background:var(--surface);border-radius:var(--radius);padding:24px;margin-bottom:16px;box-shadow:var(--shadow);}
+.section-card-title{font-family:'Sora',sans-serif;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.field-group{display:flex;flex-direction:column;gap:5px;}
+.field-group.span2{grid-column:span 2;}
+label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
+input[type=text],select,textarea{background:var(--paper);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;font-family:'Inter',sans-serif;color:var(--ink);width:100%;transition:border-color .2s;outline:none;}
+input[type=text]:focus,select:focus,textarea:focus{border-color:var(--accent);background:#fff;}
+textarea{resize:vertical;min-height:80px;}
+
+.indicadores-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+.indicador-item{display:flex;align-items:flex-start;gap:8px;}
+.indicador-item input{flex:1;}
+.btn-remove-ind{background:none;border:none;cursor:pointer;color:var(--danger);font-size:18px;padding:8px 6px;line-height:1;flex-shrink:0;opacity:.6;transition:opacity .2s;}
+.btn-remove-ind:hover{opacity:1;}
+.btn-add-ind{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--accent);background:none;border:1.5px dashed var(--accent);border-radius:8px;padding:7px 14px;cursor:pointer;transition:all .2s;}
+.btn-add-ind:hover{background:rgba(79,70,229,.06);}
+
+.config-grid{display:grid;grid-template-columns:1fr;gap:12px;}
+.option-card{border:2px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px;}
+.option-card:hover{border-color:var(--accent);}
+.option-card.selected{border-color:var(--accent);background:rgba(79,70,229,.05);}
+.option-icon{font-size:22px;flex-shrink:0;}
+.option-label{font-weight:600;font-size:14px;}
+.option-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.check-mark{margin-left:auto;width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent;transition:all .2s;flex-shrink:0;}
+.option-card.selected .check-mark{background:var(--accent);border-color:var(--accent);color:#fff;}
+.formato-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.fmt-option{border:2px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .2s;}
+.fmt-option:hover{border-color:var(--accent);}
+.fmt-option.selected{border-color:var(--accent);background:rgba(79,70,229,.05);}
+.fmt-option .fmt-icon{font-size:26px;display:block;margin-bottom:6px;}
+.fmt-option .fmt-name{font-size:12px;font-weight:700;}
+.fmt-option .fmt-desc{font-size:11px;color:var(--muted);margin-top:2px;}
+
+.alert{border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.5;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start;}
+.alert-info{background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.25);color:#0e7490;}
+.alert-warn{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);color:#92400e;}
+.alert-success{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);color:#065f46;}
+.alert-icon{flex-shrink:0;font-size:16px;}
+
+.nav-row{display:flex;gap:12px;margin-top:28px;flex-wrap:wrap;}
+.nav-row .btn{flex:1;min-width:120px;}
+
+.api-row{display:flex;align-items:center;gap:10px;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:20px;}
+.api-row label{text-transform:none;font-size:13px;font-weight:600;flex-shrink:0;white-space:nowrap;}
+.api-row input{border:none;background:transparent;font-size:13px;padding:0;flex:1;outline:none;}
+.api-selector{display:flex;gap:6px;flex-shrink:0;}
+.api-pill{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:var(--paper);color:var(--muted);transition:all .2s;}
+.api-pill.active{border-color:var(--accent);background:var(--accent);color:#fff;}
+
+.summary-table{width:100%;border-collapse:collapse;font-size:13px;}
+.summary-table tr td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top;}
+.summary-table tr td:first-child{font-weight:600;color:var(--muted);width:40%;white-space:nowrap;}
+.summary-table tr:last-child td{border-bottom:none;}
+.ind-tag{display:inline-block;background:rgba(79,70,229,.10);color:var(--accent);border-radius:6px;padding:3px 8px;font-size:12px;margin:2px 2px 2px 0;line-height:1.4;}
+.fmt-tag{display:inline-flex;align-items:center;gap:4px;background:rgba(16,185,129,.10);color:#065f46;border-radius:6px;padding:3px 8px;font-size:12px;font-weight:600;margin:2px;}
+
+.module-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px;}
+.module-toolbar .btn{flex:1;min-width:100px;font-size:13px;padding:10px 14px;}
+.module-preview{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+
+.mod-cover{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);color:#fff;padding:40px 28px;text-align:center;}
+.mod-cover-logo{font-family:'Sora',sans-serif;font-size:12px;letter-spacing:2px;opacity:.6;margin-bottom:20px;text-transform:uppercase;}
+.mod-cover-title{font-family:'Sora',sans-serif;font-size:24px;font-weight:800;margin-bottom:8px;line-height:1.3;}
+.mod-cover-sub{font-size:14px;opacity:.7;margin-bottom:24px;}
+.mod-cover-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;}
+.mod-cover-chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:5px 14px;font-size:12px;}
+
+.mod-section{padding:24px 28px;border-bottom:1px solid var(--border);}
+.mod-section:last-child{border-bottom:none;}
+.mod-section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:4px;}
+.mod-section-title{font-family:'Sora',sans-serif;font-size:18px;font-weight:800;margin-bottom:16px;color:var(--ink);}
+.mod-content{font-size:14px;line-height:1.8;color:#2d2d3a;}
+.mod-content h4{font-family:'Sora',sans-serif;font-weight:700;font-size:14px;margin:16px 0 8px;color:var(--ink);}
+.mod-content ul{padding-left:20px;margin:8px 0;}
+.mod-content li{margin-bottom:6px;}
+.mod-content p{margin-bottom:10px;}
+.mod-content strong{font-weight:700;}
+
+.rubric-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px;}
+.rubric-table th{background:var(--ink);color:#fff;padding:8px 10px;text-align:left;font-weight:600;}
+.rubric-table td{padding:8px 10px;border:1px solid var(--border);vertical-align:top;line-height:1.5;}
+.rubric-table tr:nth-child(even) td{background:var(--paper);}
+.rubric-table .level-exc{background:#dcfce7!important;font-weight:600;}
+.rubric-table .level-sat{background:#fef9c3!important;}
+.rubric-table .level-proc{background:#fff7ed!important;}
+.rubric-table .level-ini{background:#fee2e2!important;}
+
+.icon-guide{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0;}
+.icon-item{display:flex;align-items:center;gap:10px;background:var(--paper);border-radius:8px;padding:10px 12px;font-size:13px;}
+.icon-item .ico{font-size:22px;flex-shrink:0;}
+
+.self-assess{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:12px 0;}
+.sa-card{border-radius:10px;padding:14px 10px;text-align:center;border:2px solid var(--border);}
+.sa-card .sa-icon{font-size:28px;margin-bottom:6px;}
+.sa-card .sa-label{font-size:12px;font-weight:700;}
+.sa-card .sa-desc{font-size:11px;color:var(--muted);margin-top:4px;}
+.sa-card.green{border-color:#bbf7d0;background:#f0fdf4;}
+.sa-card.yellow{border-color:#fde68a;background:#fffbeb;}
+.sa-card.red{border-color:#fecaca;background:#fef2f2;}
+
+.glossary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0;}
+
+/* USO DEL MÓDULO */
+.uso-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.uso-card{border:2px solid var(--border);border-radius:10px;padding:14px 12px;cursor:pointer;transition:all .2s;text-align:center;}
+.uso-card:hover{border-color:var(--accent);}
+.uso-card.selected{border-color:var(--accent);background:rgba(79,70,229,.06);}
+.uso-card .uso-icon{font-size:28px;margin-bottom:6px;}
+.uso-card .uso-label{font-size:12px;font-weight:700;margin-bottom:3px;}
+.uso-card .uso-desc{font-size:11px;color:var(--muted);line-height:1.4;}
+.uso-badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;margin:2px 0;}
+.uso-badge.home{background:#dcfce7;color:#166534;}
+.uso-badge.class{background:#dbeafe;color:#1e40af;}
+.gloss-item{background:var(--paper);border-radius:8px;padding:10px 12px;font-size:13px;}
+.gloss-term{font-weight:700;color:var(--accent);margin-bottom:2px;}
+.gloss-def{color:var(--muted);font-size:12px;}
+
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:999;transition:transform .3s ease;white-space:nowrap;}
+#toast.show{transform:translateX(-50%) translateY(0);}
+
+footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);letter-spacing:0.3px;}
+
+@media(max-width:480px){
+  .field-grid{grid-template-columns:1fr;}
+  .field-group.span2{grid-column:span 1;}
+  .formato-grid{grid-template-columns:1fr;}
+  .step-label{display:none;}
+  .step-line{width:20px;}
+  .icon-guide{grid-template-columns:1fr;}
+  .self-assess{grid-template-columns:1fr;}
+  .glossary-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-mark">Ge</div>
+  <div class="logo-text"><strong>GeMA</strong><span>PanaMentorLabs · MEDUCA</span></div>
+  <div class="header-badge" id="headerBadge">v1.0</div>
+</header>
+<div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+<div class="steps-bar">
+  <div class="step-item"><div class="step-dot active" id="dot1">1</div><span class="step-label active" id="lbl1">Subir plan</span></div>
+  <div class="step-line" id="line1"></div>
+  <div class="step-item"><div class="step-dot" id="dot2">2</div><span class="step-label" id="lbl2">Confirmar</span></div>
+  <div class="step-line" id="line2"></div>
+  <div class="step-item"><div class="step-dot" id="dot3">3</div><span class="step-label" id="lbl3">Configurar</span></div>
+  <div class="step-line" id="line3"></div>
+  <div class="step-item"><div class="step-dot" id="dot4">4</div><span class="step-label" id="lbl4">Resumen</span></div>
+  <div class="step-line" id="line4"></div>
+  <div class="step-item"><div class="step-dot" id="dot5">5</div><span class="step-label" id="lbl5">Módulo</span></div>
+</div>
+
+<main>
+
+<div class="screen active" id="screen1">
+  <h1 class="hero-title">Del plan de clase<br>al <em>módulo listo</em>.</h1>
+  <p class="hero-sub">Sube tu plan de Emergent (PDF o Word), GeMA extrae los datos y la IA construye el módulo completo.</p>
+  <div class="api-row">
+    <label>API:</label>
+    <div class="api-selector">
+      <button class="api-pill active" onclick="setApi('groq')" id="pill-groq">Groq</button>
+      <button class="api-pill" onclick="setApi('deepseek')" id="pill-deepseek">DeepSeek</button>
+    </div>
+    <input type="password" id="apiKeyInput" placeholder="Pega tu API key aquí…" autocomplete="off"/>
+  </div>
+  <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+    <span class="upload-icon">📄</span>
+    <div class="upload-title">Arrastra tu plan aquí</div>
+    <div class="upload-hint">o haz clic para seleccionar el archivo</div>
+    <div class="upload-formats">
+      <span class="fmt-badge pdf">📕 PDF</span>
+      <span class="fmt-badge word">📘 Word (.docx)</span>
+    </div>
+    <input type="file" id="fileInput" accept=".pdf,.docx,.doc"/>
+  </div>
+  <div class="divider-or">o</div>
+  <button class="btn btn-secondary btn-full" onclick="goManual()">✏️ Ingresar datos manualmente</button>
+</div>
+
+<div class="screen" id="screenProcessing">
+  <div class="processing-card">
+    <div class="spinner"></div>
+    <div class="processing-msg" id="processingMsg">Leyendo el documento…</div>
+    <div class="processing-sub" id="processingSub">Esto tomará unos segundos</div>
+  </div>
+</div>
+
+<div class="screen" id="screen2">
+  <div class="alert alert-info"><span class="alert-icon">✨</span><div>GeMA extrajo los datos del plan. Revisa y corrige lo que necesites.</div></div>
+  <div id="fileChipArea"></div>
+  <div class="section-card">
+    <div class="section-card-title">🏫 Datos institucionales</div>
+    <div class="field-grid">
+      <div class="field-group"><label>Escuela</label><input type="text" id="f_escuela" value="C.E.B.G. Barrigón"/></div>
+      <div class="field-group"><label>Región educativa</label><input type="text" id="f_region" value="Colón"/></div>
+      <div class="field-group"><label>Docente</label><input type="text" id="f_docente"/></div>
+      <div class="field-group"><label>Año escolar</label><input type="text" id="f_anio" value="2025"/></div>
+    </div>
+  </div>
+  <div class="section-card">
+    <div class="section-card-title">📚 Datos del plan de clase</div>
+    <div class="field-grid">
+      <div class="field-group"><label>Asignatura</label><input type="text" id="f_asignatura"/></div>
+      <div class="field-group"><label>Grado</label><input type="text" id="f_grado"/></div>
+      <div class="field-group"><label>Nivel</label>
+        <select id="f_nivel"><option>Primaria</option><option>Premedia</option><option>Media</option></select>
+      </div>
+      <div class="field-group"><label>Trimestre</label>
+        <select id="f_trimestre"><option>I Trimestre</option><option>II Trimestre</option><option>III Trimestre</option></select>
+      </div>
+      <div class="field-group span2"><label>Tema / Unidad</label><input type="text" id="f_tema"/></div>
+      <div class="field-group span2"><label>Contenidos clave</label><textarea id="f_contenidos" rows="3"></textarea></div>
+    </div>
+  </div>
+  <div class="section-card">
+    <div class="section-card-title">🎯 Indicadores de logro</div>
+    <div class="alert alert-warn"><span class="alert-icon">⚠️</span><div>Solo indicadores académicos. No se incluyen criterios conductuales como criterios de evaluación.</div></div>
+    <div class="indicadores-list" id="indicadoresList"></div>
+    <button class="btn-add-ind" onclick="addIndicador()">+ Agregar indicador</button>
+  </div>
+  <div class="section-card">
+    <div class="section-card-title">🎮 Actividades sugeridas</div>
+    <textarea id="f_actividades" rows="4" placeholder="Actividades mencionadas en el plan…"></textarea>
+  </div>
+  <div class="nav-row">
+    <button class="btn btn-secondary" onclick="goTo(1)">← Volver</button>
+    <button class="btn btn-primary" onclick="goTo(3)">Configurar salida →</button>
+  </div>
+</div>
+
+<div class="screen" id="screen3">
+  <div class="section-card">
+    <div class="section-card-title">📊 Nivel de complejidad visual</div>
+    <div class="config-grid" id="nivelGrid">
+      <div class="option-card selected" onclick="selectNivel(this,'1-3')" data-val="1-3">
+        <span class="option-icon">🖼️</span><div><div class="option-label">Grados 1° – 3°</div><div class="option-sub">Imágenes predominantes, instrucciones simples</div></div><div class="check-mark">✓</div>
+      </div>
+      <div class="option-card" onclick="selectNivel(this,'4-6')" data-val="4-6">
+        <span class="option-icon">📝</span><div><div class="option-label">Grados 4° – 6°</div><div class="option-sub">Más texto, esquemas, gramática, producción autónoma</div></div><div class="check-mark">✓</div>
+      </div>
+      <div class="option-card" onclick="selectNivel(this,'secundaria')" data-val="secundaria">
+        <span class="option-icon">🎓</span><div><div class="option-label">Secundaria</div><div class="option-sub">Académico, terminología formal, análisis complejo</div></div><div class="check-mark">✓</div>
+      </div>
+    </div>
+  </div>
+  <div class="section-card">
+    <div class="section-card-title">🌐 Idioma del módulo</div>
+    <div class="config-grid" id="idiomaGrid">
+      <div class="option-card selected" onclick="selectIdioma(this,'es')" data-val="es">
+        <span class="option-icon">🇵🇦</span><div><div class="option-label">Español</div><div class="option-sub">Módulo completamente en español</div></div><div class="check-mark">✓</div>
+      </div>
+      <div class="option-card" onclick="selectIdioma(this,'en')" data-val="en">
+        <span class="option-icon">🇺🇸</span><div><div class="option-label">Inglés</div><div class="option-sub">Módulo en inglés (asignatura English)</div></div><div class="check-mark">✓</div>
+      </div>
+      <div class="option-card" onclick="selectIdioma(this,'bi')" data-val="bi">
+        <span class="option-icon">🔀</span><div><div class="option-label">Bilingüe</div><div class="option-sub">Instrucciones en español, contenido en inglés</div></div><div class="check-mark">✓</div>
+      </div>
+    </div>
+  </div>
+  <div class="section-card">
+    <div class="section-card-title">📤 Formato de exportación</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Selecciona uno o más formatos</p>
+    <div class="formato-grid" id="formatoGrid">
+      <div class="fmt-option selected" onclick="toggleFormato(this,'pdf')" data-val="pdf"><span class="fmt-icon">📄</span><div class="fmt-name">PDF</div><div class="fmt-desc">Para imprimir</div></div>
+      <div class="fmt-option selected" onclick="toggleFormato(this,'word')" data-val="word"><span class="fmt-icon">📝</span><div class="fmt-name">Word</div><div class="fmt-desc">Editable</div></div>
+      <div class="fmt-option selected" onclick="toggleFormato(this,'html')" data-val="html"><span class="fmt-icon">🌐</span><div class="fmt-name">HTML</div><div class="fmt-desc">Interactivo</div></div>
+    </div>
+  </div>
+  <div class="section-card">
+    <div class="section-card-title">🔄 Modalidad de uso</div>
+    <div class="uso-grid" id="usoGrid">
+      <div class="uso-card selected" onclick="selectUso(this,'completo')" data-val="completo">
+        <div class="uso-icon">🏠</div>
+        <div class="uso-label">Autoinstrucción</div>
+        <div class="uso-desc">Todo en casa. El estudiante trabaja el módulo completo de forma autónoma.</div>
+        <div style="margin-top:6px;"><span class="uso-badge home">🏠 Todo en casa</span></div>
+      </div>
+      <div class="uso-card" onclick="selectUso(this,'pre-invertida')" data-val="pre-invertida">
+        <div class="uso-icon">🔀</div>
+        <div class="uso-label">Aula pre-invertida</div>
+        <div class="uso-desc">Casa: exploración y contenido. Aula: práctica, producción y evaluación.</div>
+        <div style="margin-top:6px;"><span class="uso-badge home">🏠 S1–S3</span> <span class="uso-badge class">🏫 S4–S5</span></div>
+      </div>
+      <div class="uso-card" onclick="selectUso(this,'semi-invertida')" data-val="semi-invertida">
+        <div class="uso-icon">⚡</div>
+        <div class="uso-label">Aula semi-invertida</div>
+        <div class="uso-desc">Casa: activación de saberes. Aula: contenido, práctica y evaluación.</div>
+        <div style="margin-top:6px;"><span class="uso-badge home">🏠 S1–S2</span> <span class="uso-badge class">🏫 S3–S5</span></div>
+      </div>
+      <div class="uso-card" onclick="selectUso(this,'refuerzo')" data-val="refuerzo">
+        <div class="uso-icon">🏫</div>
+        <div class="uso-label">Refuerzo en aula</div>
+        <div class="uso-desc">Todo en el aula. El docente guía cada sección con el grupo.</div>
+        <div style="margin-top:6px;"><span class="uso-badge class">🏫 Todo en clase</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-secondary" onclick="goTo(2)">← Volver</button>
+    <button class="btn btn-primary" onclick="goTo(4)">Ver resumen →</button>
+  </div>
+</div>
+
+<div class="screen" id="screen4">
+  <div class="alert alert-info"><span class="alert-icon">🚀</span><div>Todo listo. Revisa el resumen y confirma para generar el módulo completo.</div></div>
+  <div class="section-card">
+    <div class="section-card-title">📋 Resumen del módulo a generar</div>
+    <table class="summary-table" id="summaryTable"></table>
+  </div>
+  <div class="section-card" style="background:linear-gradient(135deg,rgba(79,70,229,.06),rgba(6,182,212,.06));border:1.5px solid rgba(79,70,229,.2);">
+    <div class="section-card-title" style="color:var(--ink);">⚙️ Estructura que se generará</div>
+    <div style="font-size:13px;color:var(--muted);line-height:2.2;">
+      ✅ Sección 0 — Portada institucional<br>
+      ✅ Sección 1 — Presentación + guía de íconos<br>
+      ✅ Sección 2 — ¡Empecemos! (saberes previos)<br>
+      ✅ Sección 3 — ¡Aprendamos! (desarrollo)<br>
+      ✅ Sección 4 — ¡Practiquemos! (guiada + independiente)<br>
+      ✅ Sección 5 — ¡Demostremos! (producto + rúbrica analítica)<br>
+      ✅ Sección 6 — ¿Cómo me fue? (autoevaluación)<br>
+      ✅ Sección 7 — Recursos y glosario
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn btn-secondary" onclick="goTo(3)">← Ajustar</button>
+    <button class="btn btn-success" onclick="startGeneration()" id="btnGenerate">✨ Generar módulo</button>
+  </div>
+</div>
+
+<div class="screen" id="screenGenerating">
+  <div class="processing-card">
+    <div class="spinner"></div>
+    <div class="processing-msg">Generando tu módulo…</div>
+    <div class="processing-sub">La IA está construyendo cada sección</div>
+    <div class="processing-steps" id="genSteps">
+      <div class="proc-step" id="gs0"><span class="proc-step-icon">⏳</span> Portada institucional</div>
+      <div class="proc-step" id="gs1"><span class="proc-step-icon">⏳</span> Presentación e íconos</div>
+      <div class="proc-step" id="gs2"><span class="proc-step-icon">⏳</span> ¡Empecemos! — Saberes previos</div>
+      <div class="proc-step" id="gs3"><span class="proc-step-icon">⏳</span> ¡Aprendamos! — Contenido</div>
+      <div class="proc-step" id="gs4"><span class="proc-step-icon">⏳</span> ¡Practiquemos! — Actividades</div>
+      <div class="proc-step" id="gs5"><span class="proc-step-icon">⏳</span> ¡Demostremos! — Rúbrica analítica</div>
+      <div class="proc-step" id="gs6"><span class="proc-step-icon">⏳</span> ¿Cómo me fue? — Autoevaluación</div>
+      <div class="proc-step" id="gs7"><span class="proc-step-icon">⏳</span> Recursos y glosario</div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="screen5">
+  <div class="alert alert-success"><span class="alert-icon">🎉</span><div><strong>¡Módulo generado!</strong> Revisa el contenido y descarga en el formato que prefieras.</div></div>
+  <div class="module-toolbar" id="moduleToolbar"></div>
+  <div class="module-preview" id="modulePreview"></div>
+  <div class="nav-row" style="margin-top:24px;">
+    <button class="btn btn-outline" onclick="goTo(1);resetAll()">🔄 Nuevo módulo</button>
+  </div>
+</div>
+
+</main>
+<footer>GeMA v1.0 · PanaMentorLabs · C.E.B.G. Barrigón · MEDUCA Panamá</footer>
+<div id="toast"></div>
+
+<script>
+if(typeof pdfjsLib!=='undefined'){
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+const state={
+  api:'groq',apiKey:'',
+  fileName:'',fileSize:'',extractedText:'',
+  nivel:'1-3',idioma:'es',formatos:['pdf','word','html'],uso:'completo',
+  fields:{},generatedSections:{}
+};
+
+function setApi(api){
+  state.api=api;
+  document.getElementById('pill-groq').classList.toggle('active',api==='groq');
+  document.getElementById('pill-deepseek').classList.toggle('active',api==='deepseek');
+}
+
+const fileInput=document.getElementById('fileInput');
+const uploadZone=document.getElementById('uploadZone');
+uploadZone.addEventListener('dragover',e=>{e.preventDefault();uploadZone.classList.add('drag-over');});
+uploadZone.addEventListener('dragleave',()=>uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop',e=>{e.preventDefault();uploadZone.classList.remove('drag-over');const f=e.dataTransfer.files[0];if(f)handleFile(f);});
+fileInput.addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target.files[0]);});
+
+async function handleFile(file){
+  const key=document.getElementById('apiKeyInput').value.trim();
+  if(!key){
+    showToast('❌ Ingresa tu API key primero');
+    uploadZone.style.borderColor='var(--danger)';
+    setTimeout(()=>{uploadZone.style.borderColor='var(--border)';},1500);
+    return;
+  }
+  state.apiKey=key;state.fileName=file.name;state.fileSize=(file.size/1024).toFixed(0)+' KB';
+  showOnly('screenProcessing');updateProgress(10);
+  try{
+    let text='';
+    if(file.name.toLowerCase().endsWith('.pdf')){
+      setProcessingMsg('Leyendo PDF...','Extrayendo texto con PDF.js (puede tomar unos segundos)');
+      text=await extractPDF(file);
+    }else if(file.name.toLowerCase().endsWith('.docx')||file.name.toLowerCase().endsWith('.doc')){
+      setProcessingMsg('Leyendo Word...','Convirtiendo con Mammoth.js');
+      text=await extractWord(file);
+    }else{
+      throw new Error('Formato no soportado. Solo PDF o Word.');
+    }
+    if(!text || text.trim().length<20) throw new Error('No se pudo extraer texto suficiente del documento.');
+    state.extractedText=text;updateProgress(40);
+    setProcessingMsg('Analizando con IA...','Extrayendo estructura del plan de clase');
+    const extracted=await extractWithAI(text);
+    updateProgress(90);
+    setProcessingMsg('¡Listo!','Preparando datos para revisión');
+    fillForm(extracted);
+    setTimeout(()=>{goTo(2);},600);
+  }catch(err){
+    console.error(err);
+    showToast('❌ Error al procesar el archivo: '+err.message);
+    showOnly('screen1');
+  }
+}
+
+async function extractPDF(file){
+  const ab=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:ab}).promise;
+  let txt='';
+  const maxPages=Math.min(pdf.numPages,50);
+  for(let i=1;i<=maxPages;i++){
+    const page=await pdf.getPage(i);
+    const content=await page.getTextContent();
+    const strings=content.items.map(item=>item.str).join(' ');
+    txt+=strings+'\n';
+  }
+  return txt;
+}
+
+async function extractWord(file){
+  const ab=await file.arrayBuffer();
+  const result=await mammoth.extractRawText({arrayBuffer:ab});
+  return result.value;
+}
+
+function cleanHTML(raw){
+  return raw
+    .replace(/^```html\s*/i,'')
+    .replace(/^```\s*/,'')
+    .replace(/```\s*$/,'')
+    .trim();
+}
+
+async function callAI(prompt,maxTokens=1200){
+  const endpoint=state.api==='groq'
+    ?'https://api.groq.com/openai/v1/chat/completions'
+    :'https://api.deepseek.com/chat/completions';
+  const model=state.api==='groq'?'llama-3.3-70b-versatile':'deepseek-chat';
+  const res=await fetch(endpoint,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+state.apiKey},
+    body:JSON.stringify({model,max_tokens:maxTokens,temperature:0.4,messages:[{role:'user',content:prompt}]})
+  });
+  if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'Error de API');}
+  const data=await res.json();
+  return data.choices[0].message.content.trim();
+}
+
+async function extractWithAI(text){
+  const truncated=text.slice(0,10000);
+  const prompt=`Eres un asistente experto en planes de clase de MEDUCA Panamá.
+Analiza el siguiente texto de un plan de clase y extrae los datos en formato JSON estricto.
+Responde ÚNICAMENTE con el JSON, sin explicaciones ni markdown.
+
+JSON esperado:
+{"asignatura":"","grado":"","nivel":"Primaria|Premedia|Media","trimestre":"I Trimestre|II Trimestre|III Trimestre","tema":"","docente":"","contenidos":"","indicadores":[""],"actividades":""}
+
+Reglas:
+- indicadores: solo indicadores de logro académicos (excluir puntualidad, orden, limpieza)
+- Si no encuentras un campo, déjalo vacío
+- contenidos y actividades como texto resumido
+
+TEXTO DEL PLAN:
+${truncated}`;
+  let raw=await callAI(prompt,1000);
+  raw=raw.replace(/\`\`\`json|\`\`\`/g,'').trim();
+  try{
+    return JSON.parse(raw);
+  }catch(e){
+    console.warn('Fallo en parseo JSON, usando valores por defecto',raw);
+    return {asignatura:'',grado:'',nivel:'Primaria',trimestre:'I Trimestre',tema:'',docente:'',contenidos:'',indicadores:[''],actividades:''};
+  }
+}
+
+function fillForm(data){
+  const set=(id,val)=>{const el=document.getElementById(id);if(el&&val)el.value=val;};
+  set('f_asignatura',data.asignatura);set('f_grado',data.grado);
+  set('f_tema',data.tema);set('f_docente',data.docente);
+  set('f_contenidos',data.contenidos);set('f_actividades',data.actividades);
+  if(data.nivel){const s=document.getElementById('f_nivel');for(const o of s.options){if(o.value===data.nivel){s.value=data.nivel;break;}}}
+  if(data.trimestre){const s=document.getElementById('f_trimestre');for(const o of s.options){if(o.value===data.trimestre){s.value=data.trimestre;break;}}}
+  const list=document.getElementById('indicadoresList');list.innerHTML='';
+  const inds=(data.indicadores||[]).filter(i=>i.trim());
+  if(inds.length===0)inds.push('');
+  inds.forEach(ind=>addIndicador(ind));
+  document.getElementById('fileChipArea').innerHTML=`<div class="file-chip"><span class="file-chip-icon">${state.fileName.endsWith('.pdf')?'📕':'📘'}</span><span class="file-chip-name">${state.fileName}</span><span class="file-chip-size">${state.fileSize}</span></div>`;
+}
+
+function goManual(){
+  const list=document.getElementById('indicadoresList');list.innerHTML='';addIndicador('');
+  document.getElementById('fileChipArea').innerHTML='';goTo(2);
+}
+
+function addIndicador(val=''){
+  const list=document.getElementById('indicadoresList');
+  const div=document.createElement('div');div.className='indicador-item';
+  div.innerHTML=`<input type="text" value="${String(val).replace(/"/g,'&quot;')}" placeholder="Indicador de logro académico…"/><button class="btn-remove-ind" onclick="removeIndicador(this)">×</button>`;
+  list.appendChild(div);
+}
+function removeIndicador(btn){
+  const list=document.getElementById('indicadoresList');
+  if(list.children.length>1)btn.parentElement.remove();
+  else showToast('Debe haber al menos un indicador');
+}
+function getIndicadores(){
+  return Array.from(document.querySelectorAll('#indicadoresList input')).map(i=>i.value.trim()).filter(Boolean);
+}
+
+function selectUso(card,val){
+  document.querySelectorAll('#usoGrid .uso-card').forEach(c=>c.classList.remove('selected'));
+  card.classList.add('selected');
+  state.uso=val;
+}
+function selectNivel(card,val){document.querySelectorAll('#nivelGrid .option-card').forEach(c=>c.classList.remove('selected'));card.classList.add('selected');state.nivel=val;}
+function selectIdioma(card,val){document.querySelectorAll('#idiomaGrid .option-card').forEach(c=>c.classList.remove('selected'));card.classList.add('selected');state.idioma=val;}
+function toggleFormato(card,val){card.classList.toggle('selected');if(card.classList.contains('selected')){if(!state.formatos.includes(val))state.formatos.push(val);}else{state.formatos=state.formatos.filter(f=>f!==val);}}
+
+function buildSummary(){
+  const nivelLabel={'1-3':'Grados 1°–3°','4-6':'Grados 4°–6°','secundaria':'Secundaria'};
+  const idiomaLabel={'es':'Español','en':'Inglés','bi':'Bilingüe'};
+  const fmtIcons={pdf:'📄 PDF',word:'📝 Word',html:'🌐 HTML'};
+  const inds=getIndicadores();
+  const rows=[
+    ['Escuela',document.getElementById('f_escuela').value],
+    ['Docente',document.getElementById('f_docente').value],
+    ['Asignatura',document.getElementById('f_asignatura').value],
+    ['Grado',document.getElementById('f_grado').value],
+    ['Nivel',document.getElementById('f_nivel').value],
+    ['Trimestre',document.getElementById('f_trimestre').value],
+    ['Tema / Unidad',document.getElementById('f_tema').value],
+    ['Indicadores',inds.map(i=>`<span class="ind-tag">${i}</span>`).join(' ')||'<em>—</em>'],
+    ['Complejidad visual',nivelLabel[state.nivel]],
+    ['Idioma',idiomaLabel[state.idioma]],
+    ['Exportar como',state.formatos.map(f=>`<span class="fmt-tag">${fmtIcons[f]}</span>`).join('')||'<em>Ninguno</em>'],
+    ['Modalidad',{'completo':'🏠 Autoinstrucción completa','pre-invertida':'🔀 Aula pre-invertida','semi-invertida':'⚡ Aula semi-invertida','refuerzo':'🏫 Refuerzo en aula'}[state.uso]]
+  ];
+  document.getElementById('summaryTable').innerHTML=rows.map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('');
+}
+
+async function startGeneration(){
+  if(state.formatos.length===0){showToast('⚠️ Selecciona al menos un formato');goTo(3);return;}
+  state.fields={
+    escuela:document.getElementById('f_escuela').value,
+    region:document.getElementById('f_region').value,
+    docente:document.getElementById('f_docente').value,
+    anio:document.getElementById('f_anio').value,
+    asignatura:document.getElementById('f_asignatura').value,
+    grado:document.getElementById('f_grado').value,
+    nivel:document.getElementById('f_nivel').value,
+    trimestre:document.getElementById('f_trimestre').value,
+    tema:document.getElementById('f_tema').value,
+    contenidos:document.getElementById('f_contenidos').value,
+    indicadores:getIndicadores(),
+    actividades:document.getElementById('f_actividades').value,
+    nivelVisual:state.nivel,idioma:state.idioma,formatos:[...state.formatos],uso:state.uso
+  };
+  showOnly('screenGenerating');updateProgress(50);
+  try{
+    await generateModule();
+  }catch(err){
+    console.error(err);showToast('❌ Error generando: '+err.message);goTo(4);
+  }
+}
+
+function setGenStep(idx,status){
+  const el=document.getElementById('gs'+idx);if(!el)return;
+  el.classList.remove('done','active');
+  if(status==='active'){el.classList.add('active');el.querySelector('.proc-step-icon').textContent='⚙️';}
+  else if(status==='done'){el.classList.add('done');el.querySelector('.proc-step-icon').textContent='✅';}
+}
+
+async function generateModule(){
+  const f=state.fields;
+  const idiomaTxt={es:'español',en:'inglés',bi:'español para instrucciones e inglés para el contenido académico'}[f.idioma];
+  const nivelTxt={'1-3':'primaria baja (1°-3°): usa lenguaje muy simple, muchos ejemplos visuales descritos, actividades concretas','4-6':'primaria alta (4°-6°): balance entre texto e imagen, gramática básica, producción escrita','secundaria':'secundaria: lenguaje académico, análisis, terminología formal'}[f.nivelVisual];
+  const indsStr=f.indicadores.map((ind,i)=>`${i+1}. ${ind}`).join('\n');
+  
+  const baseCtx=`
+Datos del módulo:
+- Escuela: ${f.escuela}, Región: ${f.region}
+- Docente: ${f.docente}, Año: ${f.anio}
+- Asignatura: ${f.asignatura}, Grado: ${f.grado}°, Nivel: ${f.nivel}
+- Trimestre: ${f.trimestre}, Tema: ${f.tema}
+- Contenidos: ${f.contenidos}
+- Indicadores de logro:
+${indsStr}
+- Actividades del plan: ${f.actividades}
+- Nivel de complejidad: ${nivelTxt}
+- Idioma: ${idiomaTxt}
+- Modalidad de uso: ${{'completo':'Autoinstrucción completa (todo en casa, sin docente presente)','pre-invertida':'Aula pre-invertida (Secciones 1-3 en casa, Secciones 4-5 en el aula con el docente)','semi-invertida':'Aula semi-invertida (Sección 1-2 en casa, Secciones 3-5 en el aula con el docente)','refuerzo':'Refuerzo en aula (todo con el docente presente)'}[f.uso]}
+`;
+
+  // Section labels and tone based on uso
+  const usoLabels = {
+    'completo':      {s2:'🏠 Para hacer en casa',  s3:'🏠 Para hacer en casa',  s4:'🏠 Para hacer en casa',  s5:'🏠 Para hacer en casa'},
+    'pre-invertida': {s2:'🏠 Para hacer en casa',  s3:'🏠 Para hacer en casa',  s4:'🏫 Para hacer en el aula', s5:'🏫 Para hacer en el aula'},
+    'semi-invertida':{s2:'🏠 Para hacer en casa',  s3:'🏫 Para hacer en el aula', s4:'🏫 Para hacer en el aula', s5:'🏫 Para hacer en el aula'},
+    'refuerzo':      {s2:'🏫 Para hacer en el aula',s3:'🏫 Para hacer en el aula',s4:'🏫 Para hacer en el aula',s5:'🏫 Para hacer en el aula'}
+  };
+  const usoLbl = usoLabels[f.uso]||usoLabels['completo'];
+
+  const usoToneS2 = f.uso==='completo'||f.uso==='pre-invertida'
+    ? 'El estudiante trabajará SOLO en casa con ayuda del tutor. Las instrucciones deben ser muy claras, con ejemplos resueltos, para que un adulto sin formación docente pueda guiar al estudiante.'
+    : 'El estudiante trabajará en el AULA con el docente presente. Las instrucciones pueden ser más abiertas y dialógicas.';
+
+  const usoToneS3 = f.uso==='completo'||f.uso==='pre-invertida'
+    ? 'IMPORTANTE: Esta sección se trabajará EN CASA sin docente. El contenido debe ser autodidacta: incluir más ejemplos visuales, instrucciones paso a paso, y andamiaje suficiente para que el estudiante aprenda solo con apoyo del tutor.'
+    : 'IMPORTANTE: Esta sección se trabajará EN EL AULA con el docente. El contenido puede ser más dinámico, con espacios para interacción grupal y preguntas al docente.';
+
+  const usoToneS4 = f.uso==='semi-invertida'||f.uso==='refuerzo'||f.uso==='pre-invertida'
+    ? 'IMPORTANTE: Estas actividades se realizarán EN EL AULA con el docente. Incluir actividades de interacción entre pares (pair work), momentos de retroalimentación docente, y actividades de producción oral grupal además de las individuales.'
+    : 'IMPORTANTE: Estas actividades se realizarán EN CASA. Cada actividad debe ser completamente autónoma. Incluir respuestas modelo o banco de palabras para que el estudiante pueda autocorregirse.';
+
+  const sections={};
+
+  setGenStep(0,'done');setGenStep(1,'done');setGenStep(2,'active');
+  sections.s2=cleanHTML(await callAI(`${baseCtx}
+${usoToneS2}
+Genera SOLO la Sección 2 "¡Empecemos! / Saberes Previos" de un módulo de autoinstrucción MEDUCA.
+IMPORTANTE: Cada actividad debe activar conocimientos previos que preparen al estudiante para alcanzar los INDICADORES DE LOGRO listados arriba. No generes actividades genéricas — cada una debe conectar directamente con al menos uno de los indicadores.
+OBLIGATORIO incluir EXACTAMENTE estas 3 actividades:
+
+1. 🎧 LISTENING — Activación auditiva (alineada a indicadores de escucha/comprensión oral):
+   El tutor lee 3 oraciones cortas relacionadas al tema. El estudiante escucha y realiza la acción indicada (señalar, circular, numerar). Escribe las 3 oraciones exactas basadas en el vocabulario y estructuras de los indicadores.
+
+2. 🗣️ SPEAKING — Activación oral (alineada a indicadores de producción oral):
+   Muestra 3 situaciones/imágenes descritas en texto. El estudiante dice en voz alta lo que observa usando palabras del tema. Cada situación debe conectar con un indicador de logro específico.
+
+3. 🤔 SABERES PREVIOS — Conexión con conocimiento previo:
+   2-3 preguntas que conecten lo que el estudiante ya sabe con lo que va a aprender según los indicadores. Incluir una actividad de predicción ("¿Qué crees que vas a aprender hoy?").
+
+Formato: HTML semántico con <h3> para cada actividad, <ol> para ítems, <p> para instrucciones. SIN estilos inline. Mínimo 300 palabras.
+Responde SOLO el HTML de contenido, sin head ni body.`,900));
+  setGenStep(2,'done');
+
+  setGenStep(3,'active');
+  sections.s3=cleanHTML(await callAI(`${baseCtx}
+${usoToneS3}
+Genera SOLO la Sección 3 "¡Aprendamos! / Contenido" del módulo.
+IMPORTANTE: Todo el contenido debe enseñar exactamente lo que los INDICADORES DE LOGRO exigen. Antes de generar cada parte, identifica qué indicadores cubre. No incluyas vocabulario, estructuras o textos que no estén directamente relacionados con los indicadores listados arriba.
+
+OBLIGATORIO incluir TODAS estas partes, cada una etiquetada con qué indicadores cubre:
+
+1. 📖 VOCABULARIO CLAVE (cubre indicadores de identificación/reconocimiento de palabras):
+   Tabla HTML con 8-10 palabras extraídas DIRECTAMENTE del contexto de los indicadores de logro. Columnas: Palabra | Emoji | Traducción | Ejemplo de oración alineado al indicador.
+
+2. 📚 TEXTO DE LECTURA (cubre indicadores de comprensión lectora y escucha):
+   Texto corto (8-10 oraciones) que modele las estructuras gramaticales y vocabulario de los indicadores. El texto debe ser un ejemplo de lo que el estudiante deberá producir o comprender según los indicadores.
+
+3. 🎵 CHANT O RIMA (cubre indicadores de producción oral y fonética):
+   Rima o chant de 4-6 líneas que practique los patrones de lenguaje específicos de los indicadores (estructuras, vocabulario, sonidos mencionados en los indicadores).
+
+4. 📝 ESTRUCTURA GRAMATICAL (cubre indicadores de producción escrita y oral):
+   Explicación simple de la estructura que los indicadores exigen producir, con exactamente 3 ejemplos tomados del contexto de los indicadores de logro.
+
+Formato: HTML semántico con <h3> etiquetado con los indicadores que cubre, <table> para vocabulario, <blockquote> para texto. SIN estilos inline. Mínimo 450 palabras.
+Responde SOLO el HTML de contenido.`,1500));
+  setGenStep(3,'done');
+
+  setGenStep(4,'active');
+  sections.s4=cleanHTML(await callAI(`${baseCtx}
+Genera SOLO la Sección 4 "¡Practiquemos! / Actividades" del módulo.
+REGLA FUNDAMENTAL: Cada actividad debe estar diseñada para que el estudiante practique y demuestre el logro de los INDICADORES DE LOGRO listados arriba. Antes de escribir cada actividad, identifica explícitamente qué indicador(es) practica. Los ejercicios deben usar exactamente el vocabulario, las estructuras y los contextos descritos en los indicadores — no inventar situaciones ajenas al tema.
+
+OBLIGATORIO incluir EXACTAMENTE estas 5 actividades, cada una con 3 ítems y su indicador(es) de referencia:
+
+1. 🎧 LISTENING — Comprensión auditiva:
+   Indicador que practica: [el/los indicadores de escucha/comprensión oral de la lista].
+   El tutor lee 3 oraciones/mini-diálogos en voz alta usando el vocabulario y estructuras de los indicadores. El estudiante escucha y ejecuta: circular la respuesta correcta, numerar en orden, o señalar la imagen. Escribe las 3 oraciones exactas que usará el tutor, tomadas del contexto de los indicadores.
+
+2. 📖 READING — Comprensión lectora:
+   Indicador que practica: [el/los indicadores de lectura/comprensión escrita de la lista].
+   3 ejercicios sobre el texto de la Sección 3. Tipos: verdadero/falso con corrección, completar con banco de palabras del vocabulario de los indicadores, o responder preguntas directas con una palabra.
+
+3. ✍️ WRITING — Producción escrita:
+   Indicador que practica: [el/los indicadores de escritura/producción escrita de la lista].
+   3 ejercicios progresivos: (a) copiar y completar una oración modelo tomada directamente de los indicadores, (b) fill in the blank con banco de palabras del tema, (c) escribir 1-2 oraciones propias usando la estructura de los indicadores.
+
+4. 🗣️ SPEAKING — Producción oral:
+   Indicador que practica: [el/los indicadores de producción oral/habla de la lista].
+   3 actividades: (a) repetir 3 oraciones modelo que ejemplifican los indicadores, (b) responder 3 preguntas orales cuyas respuestas demuestran los indicadores, (c) describir una situación usando las estructuras de los indicadores.
+
+5. 🤝 MEDIATION — Mediación lingüística:
+   Indicador que practica: [indicadores que involucren conexión con contexto real, gestos, o estrategias de comunicación].
+   3 actividades de conexión real: (a) relacionar 3 palabras/conceptos del tema con objetos o situaciones de su vida cotidiana, (b) explicar en español a alguien de casa qué aprendió hoy en inglés, (c) usar gestos o dibujos para comunicar 3 palabras del tema sin hablar.
+
+Para cada actividad incluir: ícono + nombre de habilidad, indicador(es) que practica entre paréntesis, instrucción clara, 3 ítems numerados con el contenido exacto, y ejemplo resuelto del ítem 1.
+Formato: HTML semántico con <h3> para cada actividad, <ol> para ítems, <p class="indicador-ref"> para la referencia al indicador. SIN estilos inline. Mínimo 600 palabras.
+Responde SOLO el HTML de contenido.`,2000));
+  setGenStep(4,'done');
+
+  setGenStep(5,'active');
+  sections.s5=cleanHTML(await callAI(`${baseCtx}
+Genera SOLO la Sección 5 "¡Demostremos! / Evaluación" del módulo.
+REGLA FUNDAMENTAL: La rúbrica debe evaluar ÚNICAMENTE el logro de los INDICADORES DE LOGRO listados arriba. Cada criterio de la rúbrica debe derivarse directamente de uno o más indicadores — no inventes criterios genéricos. Los descriptores de cada nivel deben describir exactamente qué tan bien el estudiante demuestra el indicador.
+
+OBLIGATORIO incluir:
+
+1. PRODUCTO EVALUABLE: Describe una tarea integradora concreta que permita al estudiante demostrar el logro de los indicadores principales. La tarea debe integrar al menos 2 habilidades (por ejemplo: escuchar y escribir, leer y hablar). Especifica qué debe producir el estudiante, en qué formato, y con qué recursos puede apoyarse.
+
+2. RÚBRICA ANALÍTICA en tabla HTML:
+   - Columnas: Criterio (derivado del indicador) | Excelente 5.0 | Satisfactorio 3.5–4.9 | En proceso 2.0–3.4 | Inicio 1.0–1.9
+   - Filas: 3-4 criterios, cada uno etiquetado con el indicador de logro del que se deriva entre paréntesis
+   - Los descriptores deben ser observables y medibles, en lenguaje apropiado para el nivel
+   - PROHIBIDO incluir puntualidad, nitidez, orden u otros criterios conductuales como criterios de nota
+
+3. NOTA DE CORTESÍA (fuera de la rúbrica, en <p>):
+   Recordatorio amable al estudiante y tutor de devolver el módulo con puntualidad y en buen estado, aclarando explícitamente que esto NO afecta la calificación sino que refleja responsabilidad y respeto.
+
+Formato: HTML con <table> para la rúbrica. SIN estilos inline. Responde SOLO el HTML de contenido.`,1500));
+  setGenStep(5,'done');
+
+  setGenStep(6,'active');
+  sections.s6=cleanHTML(await callAI(`${baseCtx}
+Genera SOLO la Sección 6 "¿Cómo me fue? / Autoevaluación" del módulo.
+Incluye:
+1. Escala descriptiva de 3 niveles (Lo logré / Casi lo logro / Necesito ayuda) con descripción breve para cada uno
+2. 2-3 preguntas de metacognición simples (¿Qué fue lo más difícil? ¿Qué estrategia usé?)
+Formato: HTML simple. Máx 200 palabras.
+Responde SOLO el HTML de contenido.`,600));
+  setGenStep(6,'done');
+
+  setGenStep(7,'active');
+  sections.s7=cleanHTML(await callAI(`${baseCtx}
+Genera SOLO la Sección 7 "Recursos y Glosario" del módulo.
+Incluye:
+1. Glosario de 6-8 términos clave del tema con definición simple
+2. Nota para el tutor (orientaciones breves sobre cómo acompañar al estudiante en casa)
+3. Recursos opcionales (2-3 sugerencias: canciones, videos, actividades - marcadas como opcionales por conectividad)
+Formato: HTML simple. Responde SOLO el HTML de contenido.`,700));
+  setGenStep(7,'done');
+
+  state.generatedSections=sections;
+  updateProgress(98);
+  goTo(5);
+  void document.getElementById('screen5').offsetHeight;
+  renderModule(sections);
+  updateProgress(100);
+}
+
+function renderModule(sections){
+  const f=state.fields;
+  const idiomaTit={es:'',en:' / English',bi:' / English'}[f.idioma];
+  const _usoLabels={
+    'completo':      {s2:'🏠 Para hacer en casa',  s3:'🏠 Para hacer en casa',  s4:'🏠 Para hacer en casa',  s5:'🏠 Para hacer en casa'},
+    'pre-invertida': {s2:'🏠 Para hacer en casa',  s3:'🏠 Para hacer en casa',  s4:'🏫 Para hacer en el aula',s5:'🏫 Para hacer en el aula'},
+    'semi-invertida':{s2:'🏠 Para hacer en casa',  s3:'🏫 Para hacer en el aula',s4:'🏫 Para hacer en el aula',s5:'🏫 Para hacer en el aula'},
+    'refuerzo':      {s2:'🏫 Para hacer en el aula',s3:'🏫 Para hacer en el aula',s4:'🏫 Para hacer en el aula',s5:'🏫 Para hacer en el aula'}
+  };
+  const usoLbl=_usoLabels[f.uso||'completo'];
+
+  const preview=document.getElementById('modulePreview');
+  preview.innerHTML=`
+    <div class="mod-cover">
+      <div class="mod-cover-logo">MEDUCA Panamá · ${f.region} · ${f.escuela}</div>
+      <div class="mod-cover-title">📘 ${f.tema}</div>
+      <div class="mod-cover-sub">Módulo de Autoinstrucción${idiomaTit}</div>
+      <div class="mod-cover-chips">
+        <span class="mod-cover-chip">📚 ${f.asignatura}</span>
+        <span class="mod-cover-chip">🎓 ${f.grado}° · ${f.nivel}</span>
+        <span class="mod-cover-chip">📅 ${f.trimestre} · ${f.anio}</span>
+        <span class="mod-cover-chip">👩‍🏫 ${f.docente}</span>
+        <span class="mod-cover-chip">${{'completo':'🏠 Autoinstrucción','pre-invertida':'🔀 Pre-invertida','semi-invertida':'⚡ Semi-invertida','refuerzo':'🏫 Refuerzo'}[f.uso||'completo']}</span>
+      </div>
+    </div>
+
+    <div class="mod-section">
+      <div class="mod-section-label">Sección 1</div>
+      <div class="mod-section-title">📋 Presentación del Módulo</div>
+      <div class="mod-content">
+        <h4>🎯 ¿Qué vas a aprender?</h4>
+        <ul>${f.indicadores.map(ind=>`<li>${ind}</li>`).join('')}</ul>
+        <h4>🗺️ ¿Cómo usar este módulo?</h4>
+        <div class="icon-guide">
+          <div class="icon-item"><span class="ico">🎧</span> <strong>Escucha</strong> con atención</div>
+          <div class="icon-item"><span class="ico">✍️</span> <strong>Escribe</strong> o colorea</div>
+          <div class="icon-item"><span class="ico">🗣️</span> <strong>Habla</strong> o repite en voz alta</div>
+          <div class="icon-item"><span class="ico">📖</span> <strong>Lee</strong> con cuidado</div>
+          <div class="icon-item"><span class="ico">🤔</span> <strong>Piensa</strong> antes de responder</div>
+          <div class="icon-item"><span class="ico">✂️</span> <strong>Recorta</strong> o pega</div>
+        </div>
+        <p style="margin-top:14px;padding:12px;background:#f0fdf4;border-radius:8px;font-size:13px;">
+          💚 <strong>¡Tú puedes lograrlo!</strong> Lee cada instrucción con calma. Si tienes dudas, pide ayuda a un adulto en casa. ¡Estamos seguros de que lo harás muy bien!
+        </p>
+      </div>
+    </div>
+
+    <div class="mod-section">
+      <div class="mod-section-label">Sección 2 <span class="uso-badge ${f.uso==='completo'||f.uso==='pre-invertida'?'home':'class'}">${usoLbl.s2}</span></div>
+      <div class="mod-section-title">🚀 ¡Empecemos! — Saberes Previos</div>
+      <div class="mod-content">${sections.s2||'<p>Contenido no disponible.</p>'}</div>
+    </div>
+
+    <div class="mod-section">
+      <div class="mod-section-label">Sección 3 <span class="uso-badge ${f.uso==='completo'||f.uso==='pre-invertida'?'home':'class'}">${usoLbl.s3}</span></div>
+      <div class="mod-section-title">📚 ¡Aprendamos! — Contenido</div>
+      <div class="mod-content">${sections.s3||'<p>Contenido no disponible.</p>'}</div>
+    </div>
+
+    <div class="mod-section">
+      <div class="mod-section-label">Sección 4 <span class="uso-badge ${f.uso==='pre-invertida'||f.uso==='semi-invertida'||f.uso==='refuerzo'?'class':'home'}">${usoLbl.s4}</span></div>
+      <div class="mod-section-title">✏️ ¡Practiquemos! — Actividades</div>
+      <div class="mod-content">${sections.s4||'<p>Contenido no disponible.</p>'}</div>
+    </div>
+
+    <div class="mod-section">
+      <div class="mod-section-label">Sección 5 <span class="uso-badge ${f.uso==='pre-invertida'||f.uso==='semi-invertida'||f.uso==='refuerzo'?'class':'home'}">${usoLbl.s5}</span></div>
+      <div class="mod-section-title">🏆 ¡Demostremos! — Evaluación</div>
+      <div class="mod-content">${sections.s5||'<p>Contenido no disponible.</p>'}</div>
+    </div>
+
+    <div class="mod-section">
+      <div class="mod-section-label">Sección 6</div>
+      <div class="mod-section-title">🪞 ¿Cómo me fue? — Autoevaluación</div>
+      <div class="mod-content">
+        <div class="self-assess">
+          <div class="sa-card green"><div class="sa-icon">✅</div><div class="sa-label">Lo logré</div><div class="sa-desc">Puedo explicar o hacer esto solo/a</div></div>
+          <div class="sa-card yellow"><div class="sa-icon">🔄</div><div class="sa-label">Casi lo logro</div><div class="sa-desc">Lo entiendo pero necesito repasar</div></div>
+          <div class="sa-card red"><div class="sa-icon">🆘</div><div class="sa-label">Necesito ayuda</div><div class="sa-desc">Todavía tengo dudas importantes</div></div>
+        </div>
+        ${sections.s6||''}
+      </div>
+    </div>
+
+    <div class="mod-section">
+      <div class="mod-section-label">Sección 7</div>
+      <div class="mod-section-title">📖 Recursos y Glosario</div>
+      <div class="mod-content">${sections.s7||'<p>Contenido no disponible.</p>'}</div>
+    </div>
+  `;
+
+  const toolbar=document.getElementById('moduleToolbar');
+  toolbar.innerHTML='';
+  // Always show all 3 buttons
+  if(true||f.formatos.includes('pdf')){
+    const btn=document.createElement('button');
+    btn.className='btn btn-primary';btn.innerHTML='📄 Descargar PDF';
+    btn.onclick=()=>{showToast('🖨️ Usa Imprimir → Guardar como PDF desde el navegador');setTimeout(()=>window.print(),800);};
+    toolbar.appendChild(btn);
+  }
+  if(true||f.formatos.includes('word')){
+    const btn=document.createElement('button');
+    btn.className='btn btn-secondary';btn.innerHTML='📝 Descargar Word';
+    btn.onclick=async()=>{
+      if(typeof docx==='undefined'){
+        showToast('⚠️ Librería Word aún no cargada. Verifica tu conexión a internet e inténtalo de nuevo.');
+        return;
+      }
+      try{
+        const {Document,Packer,Paragraph,TextRun,HeadingLevel,AlignmentType,Table,TableRow,TableCell,WidthType,BorderStyle,ShadingType}=docx;
+        const BORDER={style:BorderStyle.SINGLE,size:4,color:'CCCCCC'};
+        const CELL_BORDERS={top:BORDER,bottom:BORDER,left:BORDER,right:BORDER};
+
+        function collectRuns(node,opts){
+          opts=opts||{};
+          const runs=[];
+          node.childNodes.forEach(child=>{
+            if(child.nodeType===3){
+              const t=child.textContent;
+              if(t)runs.push(new TextRun({text:t,bold:!!opts.bold,italics:!!opts.italic,color:opts.color}));
+            }else if(child.nodeType===1){
+              const tag=child.tagName.toLowerCase();
+              if(tag==='br'){
+                runs.push(new TextRun({text:'',break:1}));
+              }else if(tag==='strong'||tag==='b'){
+                runs.push.apply(runs,collectRuns(child,Object.assign({},opts,{bold:true})));
+              }else if(tag==='em'||tag==='i'){
+                runs.push.apply(runs,collectRuns(child,Object.assign({},opts,{italic:true})));
+              }else{
+                runs.push.apply(runs,collectRuns(child,opts));
+              }
+            }
+          });
+          return runs;
+        }
+
+        function convertTable(tableEl){
+          const rows=[];
+          tableEl.querySelectorAll('tr').forEach(tr=>{
+            const cells=[];
+            tr.querySelectorAll('th,td').forEach(cell=>{
+              const isHeader=cell.tagName.toLowerCase()==='th';
+              const runOpts=isHeader?{bold:true,color:'FFFFFF'}:{};
+              const cellBlocks=[];
+              const blockEls=cell.querySelectorAll('p,div,h1,h2,h3,h4,h5,h6,li');
+              if(blockEls.length){
+                blockEls.forEach(b=>{
+                  const runs=collectRuns(b,runOpts);
+                  if(runs.length)cellBlocks.push(new Paragraph({children:runs}));
+                });
+              }else{
+                const runs=collectRuns(cell,runOpts);
+                cellBlocks.push(new Paragraph({children:runs.length?runs:[new TextRun({text:''})]}));
+              }
+              if(!cellBlocks.length)cellBlocks.push(new Paragraph({children:[new TextRun({text:''})]}));
+              cells.push(new TableCell({
+                children:cellBlocks,
+                shading:isHeader?{fill:'1A1A2E',type:ShadingType.CLEAR,color:'auto'}:undefined,
+                borders:CELL_BORDERS
+              }));
+            });
+            rows.push(new TableRow({children:cells}));
+          });
+          return new Table({rows,width:{size:100,type:WidthType.PERCENTAGE}});
+        }
+
+        function blocksFromContainer(container){
+          const out=[];
+          const walk=parent=>{
+            parent.childNodes.forEach(node=>{
+              if(node.nodeType===3){
+                const t=node.textContent.replace(/\s+/g,' ').trim();
+                if(t)out.push(new Paragraph({children:[new TextRun({text:t})]}));
+                return;
+              }
+              if(node.nodeType!==1)return;
+              const tag=node.tagName.toLowerCase();
+              if(tag==='table'){
+                out.push(convertTable(node));
+              }else if(tag==='ul'||tag==='ol'){
+                Array.from(node.children).forEach((li,idx)=>{
+                  if(li.tagName.toLowerCase()!=='li')return;
+                  const bullet=tag==='ol'?(idx+1)+'. ':'• ';
+                  const runs=collectRuns(li);
+                  out.push(new Paragraph({
+                    children:[new TextRun({text:bullet}),...runs],
+                    indent:{left:360}
+                  }));
+                });
+              }else if(/^h[1-6]$/.test(tag)){
+                const lvl={h1:HeadingLevel.HEADING_1,h2:HeadingLevel.HEADING_2,h3:HeadingLevel.HEADING_3,h4:HeadingLevel.HEADING_4,h5:HeadingLevel.HEADING_5,h6:HeadingLevel.HEADING_6}[tag];
+                out.push(new Paragraph({heading:lvl,spacing:{before:160,after:80},children:collectRuns(node,{bold:true})}));
+              }else if(tag==='p'){
+                const runs=collectRuns(node);
+                if(runs.length)out.push(new Paragraph({spacing:{after:80},children:runs}));
+              }else if(tag==='br'){
+                /* skip at block level */
+              }else if(tag==='div'||tag==='section'||tag==='article'){
+                const hasBlocks=Array.from(node.children).some(c=>['div','p','ul','ol','table','h1','h2','h3','h4','h5','h6','li','section','article'].includes(c.tagName.toLowerCase()));
+                if(hasBlocks){
+                  walk(node);
+                }else{
+                  const runs=collectRuns(node);
+                  if(runs.length)out.push(new Paragraph({spacing:{after:60},children:runs}));
+                }
+              }else{
+                /* spans, etc: treat as inline-only paragraph */
+                const runs=collectRuns(node);
+                if(runs.length)out.push(new Paragraph({children:runs}));
+              }
+            });
+          };
+          walk(container);
+          return out;
+        }
+
+        const children=[];
+        const idiomaTit={es:'',en:' / English',bi:' / English'}[f.idioma]||'';
+        const usoLbl={'completo':'Autoinstrucción','pre-invertida':'Pre-invertida','semi-invertida':'Semi-invertida','refuerzo':'Refuerzo'}[f.uso||'completo'];
+
+        children.push(new Paragraph({
+          alignment:AlignmentType.CENTER,
+          spacing:{after:120},
+          children:[new TextRun({text:`MEDUCA Panamá · ${f.region||''} · ${f.escuela||''}`,size:18,color:'666666'})]
+        }));
+        children.push(new Paragraph({
+          alignment:AlignmentType.CENTER,
+          heading:HeadingLevel.TITLE,
+          spacing:{after:120},
+          children:[new TextRun({text:`📘 ${f.tema||''}`,bold:true,size:40,color:'1A1A2E'})]
+        }));
+        children.push(new Paragraph({
+          alignment:AlignmentType.CENTER,
+          spacing:{after:240},
+          children:[new TextRun({text:`Módulo de Autoinstrucción${idiomaTit}`,italics:true,size:22,color:'555555'})]
+        }));
+        const metaLine=`📚 ${f.asignatura||''}   ·   🎓 ${f.grado||''}° ${f.nivel||''}   ·   📅 ${f.trimestre||''} ${f.anio||''}   ·   👩‍🏫 ${f.docente||''}   ·   ${usoLbl}`;
+        children.push(new Paragraph({
+          alignment:AlignmentType.CENTER,
+          spacing:{after:400},
+          children:[new TextRun({text:metaLine,size:20,color:'333333'})]
+        }));
+
+        const preview=document.getElementById('modulePreview');
+        preview.querySelectorAll('.mod-section').forEach(section=>{
+          const labelEl=section.querySelector('.mod-section-label');
+          const titleEl=section.querySelector('.mod-section-title');
+          const contentEl=section.querySelector('.mod-content');
+          if(labelEl){
+            children.push(new Paragraph({
+              spacing:{before:320,after:40},
+              children:[new TextRun({text:(labelEl.textContent||'').trim().toUpperCase(),bold:true,size:16,color:'4F46E5'})]
+            }));
+          }
+          if(titleEl){
+            children.push(new Paragraph({
+              heading:HeadingLevel.HEADING_1,
+              spacing:{after:160},
+              children:[new TextRun({text:(titleEl.textContent||'').trim(),bold:true,size:28,color:'1A1A2E'})]
+            }));
+          }
+          if(contentEl){
+            blocksFromContainer(contentEl).forEach(b=>children.push(b));
+          }
+        });
+
+        children.push(new Paragraph({
+          spacing:{before:600,after:0},
+          alignment:AlignmentType.CENTER,
+          children:[new TextRun({text:`GeMA · PanaMentorLabs · ${f.escuela||''} · MEDUCA Panamá · ${f.anio||''}`,size:16,color:'999999',italics:true})]
+        }));
+
+        const doc=new Document({
+          creator:'GeMA',
+          title:`Módulo - ${f.tema||''}`,
+          description:'Módulo de Autoinstrucción generado con GeMA',
+          styles:{default:{document:{run:{font:'Calibri',size:22}}}},
+          sections:[{properties:{},children:children}]
+        });
+
+        const blob=await Packer.toBlob(doc);
+        downloadBlob(blob,`modulo-${slugify(f.tema||'modulo')}.docx`);
+        showToast('📘 Word (.docx) descargado correctamente');
+      }catch(err){
+        console.error('Word export error:',err);
+        showToast('⚠️ Error al generar Word: '+(err&&err.message?err.message:err));
+      }
+    };
+    toolbar.appendChild(btn);
+  }
+  if(true||f.formatos.includes('html')){
+    const btn=document.createElement('button');
+    btn.className='btn btn-outline';btn.innerHTML='🌐 Descargar HTML';
+    btn.onclick=()=>{
+      const htmlContent=document.getElementById('modulePreview').innerHTML;
+      const fullHtml=`<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Módulo — ${f.tema}</title>
+<style>
+body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;color:#1a1a1a;}
+.mod-cover{background:linear-gradient(135deg,#1a1a2e,#0f3460);color:#fff;padding:40px 28px;text-align:center;border-radius:12px;margin-bottom:24px;}
+.mod-cover-logo{font-size:11px;letter-spacing:2px;opacity:.6;margin-bottom:16px;text-transform:uppercase;}
+.mod-cover-title{font-size:22px;font-weight:800;margin-bottom:8px;}
+.mod-cover-sub{font-size:13px;opacity:.7;margin-bottom:20px;}
+.mod-cover-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;}
+.mod-cover-chip{background:rgba(255,255,255,.15);border-radius:20px;padding:4px 12px;font-size:12px;}
+.mod-section{padding:24px;border:1px solid #e5e5e5;border-radius:12px;margin-bottom:16px;}
+.mod-section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#4f46e5;margin-bottom:4px;}
+.mod-section-title{font-size:18px;font-weight:800;margin-bottom:16px;}
+.mod-content{font-size:14px;line-height:1.8;}
+.mod-content h4{font-weight:700;margin:14px 0 8px;}
+.mod-content ul{padding-left:20px;margin:8px 0;}
+.mod-content li{margin-bottom:6px;}
+.icon-guide{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;}
+.icon-item{display:flex;align-items:center;gap:8px;background:#f5f5f5;border-radius:8px;padding:8px 10px;font-size:13px;}
+.self-assess{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:12px 0;}
+.sa-card{border-radius:10px;padding:12px 8px;text-align:center;border:2px solid #e5e5e5;}
+.sa-card.green{border-color:#bbf7d0;background:#f0fdf4;}
+.sa-card.yellow{border-color:#fde68a;background:#fffbeb;}
+.sa-card.red{border-color:#fecaca;background:#fef2f2;}
+.sa-icon{font-size:24px;margin-bottom:4px;}
+.sa-label{font-size:12px;font-weight:700;}
+.sa-desc{font-size:11px;color:#666;margin-top:3px;}
+table{width:100%;border-collapse:collapse;font-size:12px;margin:12px 0;}
+th{background:#1a1a2e;color:#fff;padding:8px;text-align:left;}
+td{padding:8px;border:1px solid #e5e5e5;}
+@media print{.mod-section{break-inside:avoid;}}
+</style></head><body>${htmlContent}<footer style="text-align:center;margin-top:40px;font-size:11px;color:#999;border-top:1px solid #eee;padding-top:16px;">GeMA · PanaMentorLabs · ${f.escuela} · MEDUCA Panamá · ${f.anio}</footer></body></html>`;
+      downloadBlob(new Blob([fullHtml],{type:'text/html'}),`modulo-${slugify(f.tema)}.html`);
+    };
+    toolbar.appendChild(btn);
+  }
+}
+
+function downloadBlob(blob,filename){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=filename;
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+function slugify(str){
+  return (str||'modulo').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'').slice(0,40);
+}
+
+function goTo(step){
+  if(step===4)buildSummary();
+  const map={1:'screen1',2:'screen2',3:'screen3',4:'screen4',5:'screen5'};
+  showOnly(map[step]);
+  updateSteps(step);
+  updateProgress(step*20);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function showOnly(id){
+  ['screen1','screen2','screen3','screen4','screen5','screenProcessing','screenGenerating']
+    .forEach(s=>{const el=document.getElementById(s);if(el)el.classList.remove('active');});
+  const el=document.getElementById(id);if(el)el.classList.add('active');
+}
+
+function updateSteps(step){
+  for(let i=1;i<=5;i++){
+    const dot=document.getElementById('dot'+i);
+    const lbl=document.getElementById('lbl'+i);
+    if(!dot)continue;
+    dot.classList.remove('active','done');if(lbl)lbl.classList.remove('active');
+    if(i<step){dot.classList.add('done');dot.textContent='✓';}
+    else if(i===step){dot.classList.add('active');dot.textContent=i;if(lbl)lbl.classList.add('active');}
+    else{dot.textContent=i;}
+  }
+  for(let i=1;i<=4;i++){
+    const line=document.getElementById('line'+i);
+    if(line)line.classList.toggle('done',i<step);
+  }
+  const badge=document.getElementById('headerBadge');
+  if(step===5)badge.textContent='✅ Módulo listo';
+  else badge.textContent='Fase 1·2 · v1.0';
+}
+
+function updateProgress(pct){document.getElementById('progressFill').style.width=pct+'%';}
+function setProcessingMsg(msg,sub){
+  document.getElementById('processingMsg').textContent=msg;
+  document.getElementById('processingSub').textContent=sub;
+}
+
+function resetAll(){
+  state.generatedSections={};state.fields={};state.extractedText='';
+  state.fileName='';state.fileSize='';
+  document.getElementById('fileInput').value='';
+  document.getElementById('apiKeyInput').value='';
+  document.getElementById('fileChipArea').innerHTML='';
+  document.getElementById('indicadoresList').innerHTML='';
+  document.getElementById('modulePreview').innerHTML='';
+  document.getElementById('moduleToolbar').innerHTML='';
+  updateSteps(1);updateProgress(0);
+  document.getElementById('headerBadge').textContent='v1.0';
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+</script>
+</body>
+</html>
