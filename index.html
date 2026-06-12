@@ -458,20 +458,6 @@ if(typeof pdfjsLib!=='undefined'){
   pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 
-// Restore saved API selection and key from localStorage
-(function(){
-  const savedApi=localStorage.getItem('gema_api');
-  const savedKey=localStorage.getItem('gema_key');
-  if(savedApi){
-    state.api=savedApi;
-    document.getElementById('pill-groq').classList.toggle('active',savedApi==='groq');
-    document.getElementById('pill-deepseek').classList.toggle('active',savedApi==='deepseek');
-  }
-  if(savedKey){
-    document.getElementById('apiKeyInput').value=savedKey;
-  }
-})();
-
 const state={
   api:'groq',apiKey:'',
   fileName:'',fileSize:'',extractedText:'',
@@ -488,6 +474,20 @@ function setApi(api){
 
 const fileInput=document.getElementById('fileInput');
 const uploadZone=document.getElementById('uploadZone');
+// Restore saved API and key now that state + DOM are both ready
+(function(){
+  const savedApi=localStorage.getItem('gema_api');
+  const savedKey=localStorage.getItem('gema_key');
+  if(savedApi){
+    state.api=savedApi;
+    document.getElementById('pill-groq').classList.toggle('active',savedApi==='groq');
+    document.getElementById('pill-deepseek').classList.toggle('active',savedApi==='deepseek');
+  }
+  if(savedKey){
+    document.getElementById('apiKeyInput').value=savedKey;
+  }
+})();
+
 uploadZone.addEventListener('dragover',e=>{e.preventDefault();uploadZone.classList.add('drag-over');});
 uploadZone.addEventListener('dragleave',()=>uploadZone.classList.remove('drag-over'));
 uploadZone.addEventListener('drop',e=>{e.preventDefault();uploadZone.classList.remove('drag-over');const f=e.dataTransfer.files[0];if(f)handleFile(f);});
