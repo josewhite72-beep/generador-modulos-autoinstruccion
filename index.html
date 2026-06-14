@@ -217,6 +217,16 @@ textarea{resize:vertical;min-height:80px;}
 
 footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);letter-spacing:0.3px;}
 
+@media print{
+  #toast{display:none!important;}
+  .module-toolbar{display:none!important;}
+  header{display:none!important;}
+  .steps-bar{display:none!important;}
+  .progress-track{display:none!important;}
+  .alert-success{display:none!important;}
+  .nav-row{display:none!important;}
+  footer{display:none!important;}
+}
 @media(max-width:480px){
   .field-grid{grid-template-columns:1fr;}
   .field-group.span2{grid-column:span 1;}
@@ -1016,7 +1026,11 @@ function renderModule(sections){
   if(true||f.formatos.includes('pdf')){
     const btn=document.createElement('button');
     btn.className='btn btn-primary';btn.innerHTML='📄 Descargar PDF';
-    btn.onclick=()=>{showToast('🖨️ Usa Imprimir → Guardar como PDF desde el navegador');setTimeout(()=>window.print(),800);};
+    btn.onclick=()=>{
+  const t=document.getElementById('toast');
+  t.classList.remove('show');
+  setTimeout(()=>window.print(),300);
+};
     toolbar.appendChild(btn);
   }
   if(true||f.formatos.includes('word')){
@@ -1321,8 +1335,21 @@ function selectExtQty(btn,qty){
   document.querySelectorAll('.ext-qty-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   const sec=document.getElementById('extTypesSection');
-  if(qty>0){sec.style.display='block';}
-  else{sec.style.display='none';state.extTypes=[];document.querySelectorAll('.ext-type-card').forEach(c=>c.classList.remove('active'));}
+  if(qty>0){
+    sec.style.display='block';
+    // If no types selected yet, restore defaults
+    if(state.extTypes.length===0){
+      state.extTypes=['ejercicios','creativos'];
+      document.querySelectorAll('.ext-type-card').forEach(c=>{
+        const val=c.getAttribute('onclick').match(/'([^']+)'\)/)?.[1];
+        if(val&&state.extTypes.includes(val))c.classList.add('active');
+      });
+    }
+  }else{
+    sec.style.display='none';
+    state.extTypes=[];
+    document.querySelectorAll('.ext-type-card').forEach(c=>c.classList.remove('active'));
+  }
 }
 function toggleExtType(card,val){
   card.classList.toggle('active');
