@@ -526,8 +526,8 @@ const state={
 
 function setApi(api){
   state.api=api;
-  document.getElementById('pill-groq').classList.toggle('active',api==='groq');
-  document.getElementById('pill-deepseek').classList.toggle('active',api==='deepseek');
+  document.getElementById('pill-groq').classList[api==='groq'?'add':'remove']('active');
+  document.getElementById('pill-deepseek').classList[api==='deepseek'?'add':'remove']('active');
   localStorage.setItem('gema_api',api);
 }
 
@@ -539,8 +539,8 @@ const uploadZone=document.getElementById('uploadZone');
   const savedKey=localStorage.getItem('gema_key');
   if(savedApi){
     state.api=savedApi;
-    document.getElementById('pill-groq').classList.toggle('active',savedApi==='groq');
-    document.getElementById('pill-deepseek').classList.toggle('active',savedApi==='deepseek');
+    document.getElementById('pill-groq').classList[savedApi==='groq'?'add':'remove']('active');
+    document.getElementById('pill-deepseek').classList[savedApi==='deepseek'?'add':'remove']('active');
   }
   if(savedKey){
     document.getElementById('apiKeyInput').value=savedKey;
