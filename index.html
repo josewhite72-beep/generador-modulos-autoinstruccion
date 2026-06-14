@@ -587,6 +587,12 @@ function cleanHTML(raw){
     .replace(/^```html\s*/i,'')
     .replace(/^```\s*/,'')
     .replace(/```\s*$/,'')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi,'')
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi,'')
+    .replace(/^\s*<!DOCTYPE[^>]*>/gi,'')
+    .replace(/<\/?html[^>]*>/gi,'')
+    .replace(/<\/?head[^>]*>/gi,'')
+    .replace(/<\/?body[^>]*>/gi,'')
     .trim();
 }
 
@@ -793,7 +799,7 @@ OBLIGATORIO incluir EXACTAMENTE estas 3 actividades:
    2-3 preguntas que conecten lo que el estudiante ya sabe con lo que va a aprender según los indicadores. Incluir una actividad de predicción ("¿Qué crees que vas a aprender hoy?").
 
 Formato: HTML semántico con <h3> para cada actividad, <ol> para ítems, <p> para instrucciones. SIN estilos inline. Mínimo 300 palabras.
-Responde SOLO el HTML de contenido, sin head ni body.`,900));
+Responde SOLO el HTML de contenido, sin head ni body. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.`,900));
   setGenStep(2,'done');
 
   setGenStep(3,'active');
@@ -817,7 +823,7 @@ OBLIGATORIO incluir TODAS estas partes, cada una etiquetada con qué indicadores
    Explicación simple de la estructura que los indicadores exigen producir, con exactamente 3 ejemplos tomados del contexto de los indicadores de logro.
 
 Formato: HTML semántico con <h3> etiquetado con los indicadores que cubre, <table> para vocabulario, <blockquote> para texto. SIN estilos inline. Mínimo 450 palabras.
-Responde SOLO el HTML de contenido.`,1500));
+Responde SOLO el HTML de contenido. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.`,1500));
   setGenStep(3,'done');
 
   setGenStep(4,'active');
@@ -849,7 +855,7 @@ OBLIGATORIO incluir EXACTAMENTE estas 5 actividades, cada una con 3 ítems y su 
 
 Para cada actividad incluir: ícono + nombre de habilidad, indicador(es) que practica entre paréntesis, instrucción clara, 3 ítems numerados con el contenido exacto, y ejemplo resuelto del ítem 1.
 Formato: HTML semántico con <h3> para cada actividad, <ol> para ítems, <p class="indicador-ref"> para la referencia al indicador. SIN estilos inline. Mínimo 600 palabras.
-Responde SOLO el HTML de contenido.`,2000));
+Responde SOLO el HTML de contenido. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.`,2000));
   setGenStep(4,'done');
 
   setGenStep(5,'active');
@@ -870,7 +876,7 @@ OBLIGATORIO incluir:
 3. NOTA DE CORTESÍA (fuera de la rúbrica, en <p>):
    Recordatorio amable al estudiante y tutor de devolver el módulo con puntualidad y en buen estado, aclarando explícitamente que esto NO afecta la calificación sino que refleja responsabilidad y respeto.
 
-Formato: HTML con <table> para la rúbrica. SIN estilos inline. Responde SOLO el HTML de contenido.`,1500));
+Formato: HTML con <table> para la rúbrica. SIN estilos inline. Responde SOLO el HTML de contenido. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.`,1500));
   setGenStep(5,'done');
 
   setGenStep(6,'active');
@@ -880,7 +886,7 @@ Incluye:
 1. Escala descriptiva de 3 niveles (Lo logré / Casi lo logro / Necesito ayuda) con descripción breve para cada uno
 2. 2-3 preguntas de metacognición simples (¿Qué fue lo más difícil? ¿Qué estrategia usé?)
 Formato: HTML simple. Máx 200 palabras.
-Responde SOLO el HTML de contenido.`,600));
+Responde SOLO el HTML de contenido. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.`,600));
   setGenStep(6,'done');
 
   setGenStep(7,'active');
@@ -890,7 +896,7 @@ Incluye:
 1. Glosario de 6-8 términos clave del tema con definición simple
 2. Nota para el tutor (orientaciones breves sobre cómo acompañar al estudiante en casa)
 3. Recursos opcionales (2-3 sugerencias: canciones, videos, actividades - marcadas como opcionales por conectividad)
-Formato: HTML simple. Responde SOLO el HTML de contenido.`,700));
+Formato: HTML simple. Responde SOLO el HTML de contenido. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.`,700));
   setGenStep(7,'done');
 
   if(f.extQty>0&&f.extTypes.length>0){
@@ -909,7 +915,7 @@ FORMATO DE CADA ACTIVIDAD:
 - 3 ítems o pasos concretos
 - Nota final: "⭐ Actividad opcional — ¡para los que quieren ir más lejos!"
 Formato: HTML con <h3> para cada actividad, <ol> para pasos. SIN estilos inline.
-Responde SOLO el HTML de contenido.`,f.extQty<=2?900:f.extQty<=4?1500:2000));
+Responde SOLO el HTML de contenido. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.`,f.extQty<=2?900:f.extQty<=4?1500:2000));
   }
 
   state.generatedSections=sections;
