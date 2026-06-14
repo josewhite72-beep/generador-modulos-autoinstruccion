@@ -204,6 +204,21 @@ textarea{resize:vertical;min-height:80px;}
 .uso-badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;margin:2px 0;}
 .uso-badge.home{background:#dcfce7;color:#166534;}
 .uso-badge.class{background:#dbeafe;color:#1e40af;}
+
+/* EXTENSIÓN */
+.ext-qty-row{display:flex;gap:10px;margin-bottom:16px;}
+.ext-qty-btn{flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--surface);font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;color:var(--muted);}
+.ext-qty-btn.selected{border-color:var(--accent);background:rgba(79,70,229,.08);color:var(--accent);}
+.ext-types-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ext-type-card{border:2px solid var(--border);border-radius:10px;padding:12px 10px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:10px;}
+.ext-type-card:hover{border-color:var(--accent);}
+.ext-type-card.selected{border-color:var(--accent);background:rgba(79,70,229,.06);}
+.ext-type-icon{font-size:20px;flex-shrink:0;}
+.ext-type-label{font-size:12px;font-weight:700;line-height:1.3;}
+.ext-type-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.ext-none-btn{width:100%;padding:10px;border-radius:10px;border:1.5px dashed var(--border);background:transparent;font-size:13px;color:var(--muted);cursor:pointer;margin-top:8px;transition:all .2s;}
+.ext-none-btn:hover{border-color:var(--danger);color:var(--danger);}
+.ext-none-btn.selected{border-color:var(--danger);color:var(--danger);background:rgba(239,68,68,.04);}
 .gloss-item{background:var(--paper);border-radius:8px;padding:10px 12px;font-size:13px;}
 .gloss-term{font-weight:700;color:var(--accent);margin-bottom:2px;}
 .gloss-def{color:var(--muted);font-size:12px;}
@@ -391,6 +406,49 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
     </div>
   </div>
 
+  <div class="section-card">
+    <div class="section-card-title">🚀 Sección 8 — Actividades de Extensión</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Actividades opcionales adicionales para estudiantes que quieren profundizar. Alineadas a los indicadores de logro.</p>
+
+    <label style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px;">Cantidad de actividades</label>
+    <div class="ext-qty-row" id="extQtyRow">
+      <button class="ext-qty-btn selected" onclick="selectExtQty(this,0)">Ninguna</button>
+      <button class="ext-qty-btn" onclick="selectExtQty(this,2)">2</button>
+      <button class="ext-qty-btn" onclick="selectExtQty(this,4)">4</button>
+      <button class="ext-qty-btn" onclick="selectExtQty(this,6)">6</button>
+    </div>
+
+    <div id="extTypesSection" style="display:none;">
+      <label style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin:14px 0 8px;">Tipos de actividad (selección múltiple)</label>
+      <div class="ext-types-grid" id="extTypesGrid">
+        <div class="ext-type-card selected" onclick="toggleExtType(this,'ejercicios')">
+          <span class="ext-type-icon">✍️</span>
+          <div><div class="ext-type-label">Ejercicios AOA</div><div class="ext-type-sub">Práctica avanzada de las 5 habilidades</div></div>
+        </div>
+        <div class="ext-type-card selected" onclick="toggleExtType(this,'creativos')">
+          <span class="ext-type-icon">🎨</span>
+          <div><div class="ext-type-label">Actividades creativas</div><div class="ext-type-sub">Dibujar, crear, diseñar, expresar</div></div>
+        </div>
+        <div class="ext-type-card" onclick="toggleExtType(this,'mapa')">
+          <span class="ext-type-icon">🗺️</span>
+          <div><div class="ext-type-label">Mapa mental/conceptual</div><div class="ext-type-sub">Organizar ideas visualmente</div></div>
+        </div>
+        <div class="ext-type-card" onclick="toggleExtType(this,'proyecto')">
+          <span class="ext-type-icon">🔬</span>
+          <div><div class="ext-type-label">Proyecto / Investigación</div><div class="ext-type-sub">Explorar, investigar, presentar</div></div>
+        </div>
+        <div class="ext-type-card" onclick="toggleExtType(this,'roleplay')">
+          <span class="ext-type-icon">🎭</span>
+          <div><div class="ext-type-label">Role play / Dramatización</div><div class="ext-type-sub">Escenas, diálogos, actuación</div></div>
+        </div>
+        <div class="ext-type-card" onclick="toggleExtType(this,'reto')">
+          <span class="ext-type-icon">🧩</span>
+          <div><div class="ext-type-label">Reto / Problema</div><div class="ext-type-sub">Desafíos que exigen pensar</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="nav-row">
     <button class="btn btn-secondary" onclick="goTo(2)">← Volver</button>
     <button class="btn btn-primary" onclick="goTo(4)">Ver resumen →</button>
@@ -413,7 +471,8 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
       ✅ Sección 4 — ¡Practiquemos! (guiada + independiente)<br>
       ✅ Sección 5 — ¡Demostremos! (producto + rúbrica analítica)<br>
       ✅ Sección 6 — ¿Cómo me fue? (autoevaluación)<br>
-      ✅ Sección 7 — Recursos y glosario
+      ✅ Sección 7 — Recursos y glosario<br>
+      <span id="s8StructLabel" style="color:var(--muted);">⬜ Sección 8 — Actividades de extensión (ninguna seleccionada)</span>
     </div>
   </div>
   <div class="nav-row">
@@ -461,7 +520,7 @@ if(typeof pdfjsLib!=='undefined'){
 const state={
   api:'groq',apiKey:'',
   fileName:'',fileSize:'',extractedText:'',
-  nivel:'1-3',idioma:'es',formatos:['pdf','word','html'],uso:'completo',
+  nivel:'1-3',idioma:'es',formatos:['pdf','word','html'],uso:'completo',extQty:0,extTypes:['ejercicios','creativos'],
   fields:{},generatedSections:{}
 };
 
@@ -632,6 +691,20 @@ function getIndicadores(){
   return Array.from(document.querySelectorAll('#indicadoresList input')).map(i=>i.value.trim()).filter(Boolean);
 }
 
+function selectExtQty(btn,qty){
+  document.querySelectorAll('#extQtyRow .ext-qty-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  state.extQty=qty;
+  document.getElementById('extTypesSection').style.display=qty>0?'block':'none';
+}
+function toggleExtType(card,val){
+  card.classList.toggle('selected');
+  if(card.classList.contains('selected')){
+    if(!state.extTypes.includes(val))state.extTypes.push(val);
+  }else{
+    state.extTypes=state.extTypes.filter(t=>t!==val);
+  }
+}
 function selectUso(card,val){
   document.querySelectorAll('#usoGrid .uso-card').forEach(c=>c.classList.remove('selected'));
   card.classList.add('selected');
@@ -658,8 +731,16 @@ function buildSummary(){
     ['Complejidad visual',nivelLabel[state.nivel]],
     ['Idioma',idiomaLabel[state.idioma]],
     ['Exportar como',state.formatos.map(f=>`<span class="fmt-tag">${fmtIcons[f]}</span>`).join('')||'<em>Ninguno</em>'],
+    ['Extensión',state.extQty===0?'<em>Sin actividades de extensión</em>':`${state.extQty} actividades · ${state.extTypes.join(', ')}`],
     ['Modalidad',{'completo':'🏠 Autoinstrucción completa','pre-invertida':'🔀 Aula pre-invertida','semi-invertida':'⚡ Aula semi-invertida','refuerzo':'🏫 Refuerzo en aula'}[state.uso]]
   ];
+  const s8label=document.getElementById('s8StructLabel');
+  if(s8label){
+    s8label.textContent=state.extQty>0
+      ?`✅ Sección 8 — ${state.extQty} Actividades de extensión (${state.extTypes.join(', ')})`
+      :'⬜ Sección 8 — Sin actividades de extensión';
+    s8label.style.color=state.extQty>0?'var(--muted)':'var(--muted)';
+  }
   document.getElementById('summaryTable').innerHTML=rows.map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('');
 }
 
@@ -680,7 +761,7 @@ async function startGeneration(){
     contenidos:document.getElementById('f_contenidos').value,
     indicadores:getIndicadores(),
     actividades:document.getElementById('f_actividades').value,
-    nivelVisual:state.nivel,idioma:state.idioma,formatos:[...state.formatos],uso:state.uso
+    nivelVisual:state.nivel,idioma:state.idioma,formatos:[...state.formatos],uso:state.uso,extQty:state.extQty,extTypes:[...state.extTypes]
   };
   showOnly('screenGenerating');updateProgress(50);
   try{
@@ -859,6 +940,34 @@ Incluye:
 Formato: HTML simple. Responde SOLO el HTML de contenido.`,700));
   setGenStep(7,'done');
 
+  // Sección 8 — Extensión (opcional)
+  if(f.extQty>0&&f.extTypes.length>0){
+    const tiposMap={
+      ejercicios:'Ejercicios AOA avanzados (práctica adicional de las 5 habilidades: Listening, Reading, Writing, Speaking, Mediation, con mayor complejidad)',
+      creativos:'Actividades creativas (dibujar, crear, diseñar, componer, expresar artísticamente)',
+      mapa:'Mapa mental o conceptual (organizar visualmente las ideas y vocabulario del tema)',
+      proyecto:'Proyecto o investigación (explorar el tema más profundamente, investigar, presentar hallazgos)',
+      roleplay:'Role play o dramatización (escenas, diálogos, actuación relacionada con el tema)',
+      reto:'Reto o problema desafiante (ejercicio que exige pensamiento crítico o resolución de problemas)'
+    };
+    const tiposDesc=f.extTypes.map(t=>tiposMap[t]||t).join('; ');
+    sections.s8=cleanHTML(await callAI(`${baseCtx}
+Genera SOLO la Sección 8 "🚀 Actividades de Extensión" del módulo de autoinstrucción.
+PROPÓSITO: Actividades OPCIONALES para estudiantes que terminaron el módulo y quieren profundizar o que el docente asigna como enriquecimiento. Son más retadoras que las de la Sección 4.
+REGLA FUNDAMENTAL: Todas las actividades deben estar alineadas a los INDICADORES DE LOGRO listados arriba. No generar actividades genéricas — cada una debe evidenciar un indicador de forma más avanzada o creativa.
+CANTIDAD: Genera exactamente ${f.extQty} actividades.
+TIPOS SOLICITADOS: ${tiposDesc}
+DISTRIBUCIÓN: Distribuye las ${f.extQty} actividades entre los tipos solicitados de forma equilibrada.
+FORMATO DE CADA ACTIVIDAD:
+- Título con ícono del tipo
+- Indicador(es) que desarrolla (entre paréntesis)
+- Instrucción clara y motivadora
+- 3 ítems o pasos concretos
+- Nota "⭐ Actividad opcional — ¡para los que quieren ir más lejos!"
+Formato: HTML semántico con <h3> para cada actividad, <ol> para pasos, <p> para instrucciones. SIN estilos inline. Mínimo ${f.extQty*80} palabras.
+Responde SOLO el HTML de contenido.`,f.extQty<=2?800:f.extQty<=4?1400:2000));
+  }
+
   state.generatedSections=sections;
   updateProgress(98);
   goTo(5);
@@ -956,7 +1065,16 @@ function renderModule(sections){
       <div class="mod-section-title">📖 Recursos y Glosario</div>
       <div class="mod-content">${sections.s7||'<p>Contenido no disponible.</p>'}</div>
     </div>
-  `;
+    ${sections.s8?`
+    <div class="mod-section" style="border-top:2px dashed var(--accent);margin-top:8px;">
+      <div class="mod-section-label" style="color:var(--accent);">Sección 8 · Opcional</div>
+      <div class="mod-section-title">🚀 Actividades de Extensión</div>
+      <div class="alert alert-info" style="margin-bottom:16px;font-size:12px;">
+        <span>⭐</span><div>Estas actividades son <strong>opcionales</strong> — para estudiantes que quieren ir más lejos o que el docente asigna como enriquecimiento.</div>
+      </div>
+      <div class="mod-content">${sections.s8}</div>
+    </div>`:''}
+  \`;
 
   const toolbar=document.getElementById('moduleToolbar');
   toolbar.innerHTML='';
