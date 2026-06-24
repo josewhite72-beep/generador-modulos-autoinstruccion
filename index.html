@@ -741,6 +741,11 @@ function setGenStep(idx,status){
 async function generateModule(){
   const f=state.fields;
   const idiomaTxt={es:'español',en:'inglés',bi:'español para instrucciones e inglés para el contenido académico'}[f.idioma];
+  const idiomaDirectiva={
+    es:'IMPORTANTE: Genera TODO el contenido en ESPAÑOL — instrucciones, explicaciones, encabezados, notas para el tutor, todo en español.',
+    en:'IMPORTANT: Generate ALL content in ENGLISH ONLY — instructions, explanations, headings, tutor notes, everything in English. Do NOT use Spanish anywhere, including instructional text, labels, or notes for the tutor.',
+    bi:'IMPORTANTE: Genera las INSTRUCCIONES, explicaciones y notas para el tutor en ESPAÑOL, pero el CONTENIDO ACADÉMICO (vocabulario, textos de lectura, oraciones modelo, ejercicios) en INGLÉS. No mezcles: cada parte debe estar completamente en su idioma correspondiente.'
+  }[f.idioma];
   const nivelTxt={'1-3':'primaria baja (1°-3°): usa lenguaje muy simple, muchos ejemplos visuales descritos, actividades concretas','4-6':'primaria alta (4°-6°): balance entre texto e imagen, gramática básica, producción escrita','secundaria':'secundaria: lenguaje académico, análisis, terminología formal'}[f.nivelVisual];
   const indsStr=f.indicadores.map((ind,i)=>`${i+1}. ${ind}`).join('\n');
   
@@ -756,6 +761,7 @@ ${indsStr}
 - Actividades del plan: ${f.actividades}
 - Nivel de complejidad: ${nivelTxt}
 - Idioma: ${idiomaTxt}
+- ${idiomaDirectiva}
 - Modalidad de uso: ${{'completo':'Autoinstrucción completa (todo en casa, sin docente presente)','pre-invertida':'Aula pre-invertida (Secciones 1-3 en casa, Secciones 4-5 en el aula con el docente)','semi-invertida':'Aula semi-invertida (Sección 1-2 en casa, Secciones 3-5 en el aula con el docente)','refuerzo':'Refuerzo en aula (todo con el docente presente)'}[f.uso]}
 `;
 
