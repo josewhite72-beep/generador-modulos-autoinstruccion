@@ -237,6 +237,12 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
   .self-assess{grid-template-columns:1fr;}
   .glossary-grid{grid-template-columns:1fr;}
 }
+.gema-img{width:84px;height:84px;display:inline-block;vertical-align:middle;margin:2px;}
+.gema-draw{display:inline-block;border:2px dashed #000;border-radius:6px;padding:14px 8px;min-width:84px;text-align:center;font-size:11px;line-height:1.3;vertical-align:middle;}
+.trace{font-family:'Century Gothic','Quicksand',Arial,sans-serif;color:#a6a6a6;font-size:30px;letter-spacing:3px;}
+.mod-content table{width:100%;border-collapse:collapse;margin:10px 0;}
+.mod-content th,.mod-content td{border:1px solid #000;background:#fff;color:#000;padding:6px 8px;vertical-align:middle;}
+.mod-content th{font-weight:700;}
 </style>
 </head>
 <body>
@@ -312,7 +318,7 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
       <div class="field-group"><label>Asignatura</label><input type="text" id="f_asignatura"/></div>
       <div class="field-group"><label>Grado</label><input type="text" id="f_grado"/></div>
       <div class="field-group"><label>Nivel</label>
-        <select id="f_nivel"><option>Primaria</option><option>Premedia</option><option>Media</option></select>
+        <select id="f_nivel"><option>Preescolar</option><option>Primaria</option><option>Premedia</option><option>Media</option></select>
       </div>
       <div class="field-group"><label>Trimestre</label>
         <select id="f_trimestre"><option>I Trimestre</option><option>II Trimestre</option><option>III Trimestre</option></select>
@@ -341,6 +347,9 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
   <div class="section-card">
     <div class="section-card-title">📊 Nivel de complejidad visual</div>
     <div class="config-grid" id="nivelGrid">
+      <div class="option-card" onclick="selectNivel(this,'pk')" data-val="pk">
+        <span class="option-icon">🧸</span><div><div class="option-label">Preescolar (Pre-K / K)</div><div class="option-sub">No lee ni escribe: escuchar, señalar, colorear y repasar</div></div><div class="check-mark">✓</div>
+      </div>
       <div class="option-card selected" onclick="selectNivel(this,'1-3')" data-val="1-3">
         <span class="option-icon">🖼️</span><div><div class="option-label">Grados 1° – 3°</div><div class="option-sub">Imágenes predominantes, instrucciones simples</div></div><div class="check-mark">✓</div>
       </div>
@@ -487,6 +496,267 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
 <div id="toast"></div>
 
 <script>
+/* ==== GeMA · reglas por nivel ==== */
+/* =====================================================================
+   GeMA · Reglas por nivel (PanaMentorLabs)
+   Niveles: preescolar (Pre-K/K) · primerCiclo (1.°–2.°) · segundoCiclo (3.°–6.°) · secundaria
+   ===================================================================== */
+const GEMA_NIVELES = (() => {
+  const ESCALA_NUM = 'Excelente 5.0 | Satisfactorio 3.5–4.9 | En proceso 2.0–3.4 | Inicio 1.0–1.9';
+
+  const PERFILES = {
+    preescolar: {
+      etiqueta: 'Preescolar (Pre-K / Kinder)',
+      lector: 'NO lee ni escribe (ni en español). Todo lo hace con un adulto que le lee las instrucciones.',
+      minutos: '15 a 20 minutos al día, 5 días',
+      vocabMax: 6,
+      estructuras: 'Máximo 2 frases fijas (chunks) que se memorizan, p. ej. "That\'s a ___!" y "What does the ___ say?". Nada de gramática explícita.',
+      lectura: 'Sin textos. "Leer" = unir dibujo con palabra o con un globo de diálogo que el adulto lee señalando.',
+      permitidas: {
+        Listening: 'escucha y señala · escucha y colorea el dibujo nombrado · escucha el sonido y encierra entre 3 dibujos · escucha y haz el gesto',
+        Reading: 'une el dibujo con la palabra o el globo (el adulto lee y señala) · ¿con qué sonido empieza?',
+        Writing: 'repasa letras grises (trazo) y colorea · copia UNA palabra',
+        Speaking: 'repite el modelo · completa la frase fija · juego de adivinar con tarjetas · canción con gestos',
+        Mediation: 'juego en familia con gestos o tarjetas · enseña a un familiar una palabra con su gesto',
+      },
+      prohibidas: 'textos para leer · Verdadero/Falso · "corrige las oraciones falsas" · banco de palabras con oraciones · escribir oraciones · responder con "oraciones completas" · porcentajes de precisión · grabar audios como requisito · trabajo con compañeros de clase',
+      evaluacion: 'LISTA DE COTEJO para el adulto y el docente con la escala de preescolar: LHL = Lo he logrado · LEL = Lo estoy logrando · LVL = Lo voy a lograr. 4 a 5 conductas observables. SIN notas numéricas ni rúbrica 1.0–5.0.',
+      producto: 'Algo concreto y manipulable: pegar tarjetas en una escena, títere, librito de dibujos. El niño lo presenta diciendo la frase fija.',
+      escalaAuto: ['😀', 'Lo he logrado (LHL)', '🙂', 'Lo estoy logrando (LEL)', '🙁', 'Lo voy a lograr (LVL)'],
+      indicadores: '3 frases "Yo puedo…" en español, observables (escucho y señalo / digo / coloreo y repaso).',
+      pronunciacion: 'OBLIGATORIA después de CADA palabra o frase en inglés que lea el adulto, entre barras con ortografía española: That\'s a cow! /dats a CÁU/.',
+      extension: 'Actividades de movimiento, títeres o canciones; nada escrito.',
+      porDias: true,
+    },
+    primerCiclo: {
+      etiqueta: '1.° y 2.° grado',
+      lector: 'Está aprendiendo a leer y escribir en español. Lee palabras y oraciones MUY cortas en inglés con apoyo del adulto.',
+      minutos: '20 minutos al día, 5 días',
+      vocabMax: 10,
+      estructuras: '1 patrón de oración + 1 pregunta. Máximo UN adjetivo por sustantivo (a red bike; NO an old yellow taxi). Si hay una excepción (an orange), explíquela en una nota.',
+      lectura: 'Un solo cuento de máximo 5 oraciones de 3 a 7 palabras, cada una con su dibujo al lado.',
+      permitidas: {
+        Listening: 'escucha y colorea del color indicado · escucha y encierra entre 3 dibujos · escucha y numera (máx. 3–4 dibujos, todos mencionados)',
+        Reading: 'lee y une con el dibujo · lee y colorea · preguntas orales sobre el cuento',
+        Writing: 'repasa y copia palabras · completa la oración modelo con 1 palabra (banco con dibujos) · escribe 1–3 oraciones copiando el patrón',
+        Speaking: 'repite el modelo · pregunta–respuesta con tarjetas · canción con gestos',
+        Mediation: 'enseña a un familiar las palabras con gestos · busca los objetos del tema en casa o en la calle y los nombra',
+      },
+      prohibidas: 'corregir oraciones falsas · escribir oraciones libres sin modelo · dos adjetivos seguidos · textos de más de 5 oraciones · secuenciar historias que no existen en el módulo · instrucciones en inglés para el niño',
+      evaluacion: `RÚBRICA ANALÍTICA de 3 a 4 criterios (Escucha, Lee, Escribe, Habla) con la escala ${ESCALA_NUM}. Descriptores con conteos concretos ("acierta 7 de 9") y cada criterio indica de qué actividad de la Sección 4 o del producto sale la evidencia.`,
+      producto: 'Póster o librito con 3 dibujos y 3 oraciones del patrón, presentado oralmente.',
+      escalaAuto: ['😀', '¡Lo logré!', '🙂', 'Casi lo logro', '🙁', 'Necesito ayuda'],
+      indicadores: '4 frases "Yo puedo…" en español (una por destreza). Nunca liste 10 o más indicadores.',
+      pronunciacion: 'OBLIGATORIA después de cada palabra o frase en inglés que lea el adulto, entre barras con ortografía española.',
+      extension: 'Juegos y cacerías de palabras en casa o en la calle; producción escrita mínima y siempre con modelo.',
+      porDias: true,
+    },
+    segundoCiclo: {
+      etiqueta: '3.° a 6.° grado',
+      lector: 'Lee y escribe en español. En inglés lee textos cortos y escribe oraciones con modelo.',
+      minutos: '30 a 40 minutos al día',
+      vocabMax: 15,
+      estructuras: 'Hasta 2–3 estructuras del tema, con cuadro gramatical breve y ejemplos.',
+      lectura: 'Texto de 8 a 15 oraciones (3.°–4.°) o hasta 20 (5.°–6.°).',
+      permitidas: {
+        Listening: 'escucha y completa · escucha y ordena · escucha y responde V/F',
+        Reading: 'V/F con corrección · completar con banco de palabras · preguntas de comprensión',
+        Writing: 'completar oraciones · escribir 3–5 oraciones con modelo · párrafo guiado (5.°–6.°)',
+        Speaking: 'diálogo modelo · preguntas y respuestas · presentación corta',
+        Mediation: 'explicar a un familiar · relacionar con la vida diaria · comunicar con gestos o dibujos',
+      },
+      prohibidas: 'actividades que requieran compañeros de clase cuando el módulo es para casa',
+      evaluacion: `RÚBRICA ANALÍTICA de 3 a 4 criterios con la escala ${ESCALA_NUM}.`,
+      producto: 'Producto escrito + presentación oral (póster, librito, carta, entrevista a un familiar).',
+      escalaAuto: ['✅', 'Lo logré', '🔄', 'Casi lo logro', '🆘', 'Necesito ayuda'],
+      indicadores: 'Máximo 5 indicadores en lenguaje para el estudiante.',
+      pronunciacion: 'En el glosario y en las frases de Listening que lee el adulto.',
+      extension: 'Según los tipos solicitados.',
+      porDias: false,
+    },
+  };
+
+  /* ---------- Detección del nivel ---------- */
+  function clave(grado, nivelVisual, nivelEscolar) {
+    if (nivelVisual === 'pk') return 'preescolar';
+    if (nivelVisual === 'secundaria' || nivelEscolar === 'Premedia' || nivelEscolar === 'Media') return 'secundaria';
+    const g = String(grado || '').toLowerCase();
+    if (/pre|kinder|kínder|jard|preescolar|^\s*k\s*$|^\s*pk\s*$/.test(g)) return 'preescolar';
+    const palabras = { primero: 1, segundo: 2, tercero: 3, cuarto: 4, quinto: 5, sexto: 6 };
+    for (const [p, n] of Object.entries(palabras)) if (g.includes(p)) return n <= 2 ? 'primerCiclo' : 'segundoCiclo';
+    const n = parseInt(g.replace(/\D/g, ''), 10);
+    if (n >= 1 && n <= 2) return 'primerCiclo';
+    if (n >= 3 && n <= 6) return 'segundoCiclo';
+    return nivelVisual === '4-6' ? 'segundoCiclo' : 'primerCiclo';
+  }
+  const tarjetaNivel = k => ({ preescolar: 'pk', primerCiclo: '1-3', segundoCiclo: '4-6', secundaria: 'secundaria' }[k]);
+  const esPequeno = k => k === 'preescolar' || k === 'primerCiclo';
+
+  /* ---------- Reglas comunes (errores vistos en módulos reales) ---------- */
+  const COMUNES = `
+REGLAS DE COHERENCIA
+- Toda palabra que aparezca en actividades, evaluación o glosario DEBE estar en el vocabulario de la Sección 3. No introduzca colores, adjetivos ni objetos nuevos.
+- Hay UN solo texto de lectura; si lo cita, cópielo idéntico. Los datos no se contradicen entre secciones.
+- En Listening, lo que dice el adulto coincide exactamente con lo que el estudiante marca (no pida numerar 3 dibujos si la frase menciona 1).
+- Nunca imprima la respuesta junto a la pregunta: las respuestas van en la Sección 7 ("Respuestas para el adulto").
+- No cite anexos, fichas ni audios que el módulo no incluya.
+- Solo sonidos y datos reales; gramática inglesa correcta ("What does the dog say?").
+- Cada actividad incluye UN ejemplo resuelto.
+- Termine siempre cada párrafo, lista y tabla. Si le falta espacio, recorte contenido; nunca deje una frase a medias.`;
+
+  const IMG = `
+ILUSTRACIONES
+- Donde el estudiante deba señalar, encerrar, colorear, unir o identificar un objeto, escriba el marcador [[IMG:palabra]] con la palabra del vocabulario en inglés y en singular (ej. [[IMG:cow]]). La app lo convierte en un dibujo para colorear.
+- En actividades de "encierra" o "une", ponga cada opción en su propia celda de una tabla: <td>[[IMG:cat]]</td><td>[[IMG:cow]]</td>…
+- No use emojis como opciones de respuesta (no se imprimen bien). Puede usar emojis solo como íconos decorativos de títulos.`;
+
+  function bloquePrompt(k) {
+    if (k === 'secundaria') return COMUNES.trim();
+    const p = PERFILES[k];
+    const acts = Object.entries(p.permitidas).map(([s, v]) => `  - ${s}: ${v}`).join('\n');
+    return `
+NIVEL DEL ESTUDIANTE: ${p.etiqueta}
+- Perfil lector: ${p.lector}
+- Instrucciones: dirigidas al ADULTO, iniciando con "Adulto:". ${esPequeno(k) ? 'El estudiante nunca lee instrucciones por su cuenta.' : ''}
+- Tiempo: ${p.minutos}.
+- Vocabulario: máximo ${p.vocabMax} palabras.
+- Estructuras: ${p.estructuras}
+- Lectura: ${p.lectura}
+- Pronunciación: ${p.pronunciacion}
+ACTIVIDADES PERMITIDAS POR DESTREZA
+${acts}
+PROHIBIDO EN ESTE NIVEL: ${p.prohibidas}
+Si un indicador del currículo pide algo prohibido para este nivel (p. ej. "escribe 3–5 oraciones" en Kinder), ADAPTE la evidencia al nivel; no la copie literalmente.
+${COMUNES}
+${esPequeno(k) ? IMG : ''}`.trim();
+  }
+
+  /* ---------- Indicaciones por sección ---------- */
+  function specS1(k) {
+    const p = PERFILES[k] || PERFILES.segundoCiclo;
+    return `Genera SOLO el contenido de la Sección 1 "Presentación del módulo" (sin el título de la sección).
+Incluye, en este orden:
+1. <h4>🎯 Lo que voy a lograr</h4>: ${p.indicadores} Reescribe los indicadores de logro; no los copies.
+2. <h4>👨‍👩‍👧 Para la familia</h4>: 2 párrafos cortos: qué aprenderá el estudiante y cómo acompañarlo (${p.minutos}).${esPequeno(k) ? ' Aclara que el adulto NO necesita saber inglés porque cada frase trae su pronunciación entre barras.' : ''}
+${p.porDias ? '3. <h4>📅 Plan de la semana</h4>: tabla Día | Sección | ¿Qué hacemos? (Día 1: Sección 2 · Día 2: Sección 3 · Días 3 y 4: Sección 4 · Día 5: Secciones 5 y 6).\n4. <h4>💬 Frases del módulo</h4>: las frases clave de la Sección 3, cada una con su pronunciación y su significado.' : ''}
+Formato: HTML simple. Máx. 250 palabras.`;
+  }
+
+  function specS2(k) {
+    if (!esPequeno(k)) return null; // se usa la indicación original
+    return `Genera SOLO la Sección 2 "¡Empecemos! / Saberes Previos" (Día 1).
+Incluye EXACTAMENTE estas 3 actividades cortas:
+1. 🎧 LISTENING: el adulto nombra en ESPAÑOL (o hace el sonido) y el estudiante señala el dibujo. Muestra los dibujos en una tabla de 3 columnas con [[IMG:palabra]] del vocabulario. Debajo, una línea para que el adulto marque ☐ los que reconoció.
+2. 🗣️ SPEAKING: una conversación sencilla en español para descubrir qué conoce ya (el adulto pregunta; se acepta responder en español). Si aplica, compara cómo se dice algo en español y en inglés.
+3. 🤔 SABERES PREVIOS: 2 preguntas que conecten el tema con su vida en casa o en su comunidad.
+Aclara al adulto que en esta sección no hay respuestas incorrectas.
+Formato: HTML con <h3> por actividad. Máx. 300 palabras.`;
+  }
+
+  function specS3(k) {
+    if (k === 'preescolar') return `Genera SOLO la Sección 3 "¡Aprendamos! / Contenido" (Día 2). Incluye EXACTAMENTE:
+1. 📖 VOCABULARIO: tabla de máximo 6 palabras. Columnas: Dibujo | Palabra | Se pronuncia | Español${' '}| Sonido o gesto (si aplica). En Dibujo escribe [[IMG:palabra]]. El adulto señala, dice la palabra y el niño repite dos veces.
+2. 💬 FRASES CLAVE: máximo 2 frases fijas con pronunciación y un mini diálogo en tabla: El adulto pregunta | El niño responde.
+3. 🎵 CANCIÓN O RIMA: 4 a 7 líneas que repitan las frases clave, en tabla Canción | Gesto. Indica cantarla 3 veces (escuchar, con gestos, el niño completa).
+4. 🔤 ¿CON QUÉ SONIDO EMPIEZA?: 1 o 2 sonidos iniciales, cada uno con 2 palabras del vocabulario y su [[IMG:palabra]].
+NO incluyas texto de lectura ni explicación gramatical. Máx. 450 palabras.`;
+    if (k === 'primerCiclo') return `Genera SOLO la Sección 3 "¡Aprendamos! / Contenido" (Día 2). Incluye EXACTAMENTE:
+1. 📖 VOCABULARIO: tabla de máximo 10 palabras. Columnas: Dibujo | Palabra | Se pronuncia | Español. En Dibujo escribe [[IMG:palabra]] (para colores, escribe solo la palabra).
+2. 🧩 ¿CÓMO SE FORMA LA ORACIÓN?: el patrón en una tabla de 2 filas (inglés arriba, español abajo) + 2 ejemplos. Sin términos gramaticales técnicos. Nota si hay una excepción (a/an).
+3. 🎵 CANCIÓN O RIMA: 4 a 6 líneas con el patrón, en tabla Canción | Gesto.
+4. 📚 CUENTO CORTO: título + tabla de máximo 5 filas: N.º | Dibujo ([[IMG:palabra]]) | Oración (3 a 7 palabras). Luego 3 preguntas orales. ESTE es el único texto de lectura del módulo.
+5. 🔤 ¿CON QUÉ SONIDO EMPIEZA?: 1 o 2 sonidos iniciales con 2 palabras del vocabulario cada uno.
+Máx. 550 palabras.`;
+    if (k === 'segundoCiclo') return `Genera SOLO la Sección 3 "¡Aprendamos! / Contenido" del módulo. Cada parte etiquetada con los indicadores que cubre:
+1. 📖 VOCABULARIO CLAVE: tabla de 10 a 15 palabras. Columnas: Palabra | Se pronuncia | Traducción | Ejemplo de oración.
+2. 📚 TEXTO DE LECTURA: 8 a 15 oraciones (hasta 20 en 5.°–6.°) que modelen las estructuras. Es el único texto de lectura del módulo.
+3. 🎵 CHANT O RIMA: 4 a 6 líneas.
+4. 📝 ESTRUCTURA GRAMATICAL: explicación simple + 3 ejemplos.
+Formato: <h3> por parte, <table> para vocabulario, <blockquote> para el texto. Mínimo 450 palabras.`;
+    return null;
+  }
+
+  function specS4(k) {
+    if (!esPequeno(k)) return null;
+    const p = PERFILES[k];
+    const lineas = Object.entries(p.permitidas).map(([s, v], i) => `${i + 1}. ${{ Listening: '🎧', Reading: '📖', Writing: '✍️', Speaking: '🗣️', Mediation: '🤝' }[s]} ${s.toUpperCase()} — tipos permitidos: ${v}.`).join('\n');
+    return `Genera SOLO la Sección 4 "¡Practiquemos! / Actividades". Organízala en DÍA 3 (Listening, Speaking, Mediation) y DÍA 4 (Reading, Writing).
+Incluye EXACTAMENTE 5 actividades, una por destreza, usando SOLO estos tipos:
+${lineas}
+Para cada actividad: título con ícono, indicador que practica entre paréntesis, instrucción "Adulto: …", los ítems (3 a 6) con el contenido exacto, y el ejemplo resuelto del ítem 1.
+- Listening: escribe primero "Usted dice:" con las frases exactas en inglés + pronunciación; luego la tabla de dibujos [[IMG:…]] para que el niño marque.
+- Reading ${k === 'preescolar' ? '(pre-lectura)' : ''}: usa solo el vocabulario${k === 'primerCiclo' ? ' y las oraciones del cuento' : ''} de la Sección 3.
+- Writing: ${k === 'preescolar' ? 'escribe la palabra que se debe repasar entre <span class="trace">…</span> junto a su [[IMG:…]].' : 'para repasar, escribe la palabra entre <span class="trace">…</span>; deja la línea ________ para escribir.'}
+NO pongas las respuestas: van en la Sección 7.
+Formato: HTML con <h3> por actividad, <table> para dibujos, <p class="indicador-ref"> para el indicador. Máx. 700 palabras.`;
+  }
+
+  function specS5(k) {
+    const p = PERFILES[k];
+    if (k === 'preescolar') return `Genera SOLO la Sección 5 "¡Demostremos! / Evaluación" (Día 5). Incluye:
+1. PRODUCTO: ${p.producto} Pasos numerados (máx. 4) dirigidos al adulto y la frase que el niño dirá al presentarlo.
+2. LISTA DE COTEJO en tabla: columnas "El niño o la niña…" | LHL | LEL | LVL. 4 a 5 conductas observables derivadas de los indicadores. Debajo: "LHL = Lo he logrado · LEL = Lo estoy logrando · LVL = Lo voy a lograr" y una línea de Observaciones.
+3. NOTA DE CORTESÍA (en <p>): devolver el módulo a tiempo y en buen estado; aclara que NO afecta la evaluación.
+PROHIBIDO: notas numéricas, rúbrica 1.0–5.0 y criterios conductuales.`;
+    if (k === 'primerCiclo') return `Genera SOLO la Sección 5 "¡Demostremos! / Evaluación" (Día 5). Incluye:
+1. PRODUCTO: ${p.producto} Pasos numerados (máx. 4).
+2. ${p.evaluacion} Columnas: Criterio | ${ESCALA_NUM.split(' | ').join(' | ')}.
+3. NOTA DE CORTESÍA (en <p>): devolver el módulo a tiempo y en buen estado; aclara que NO afecta la calificación.
+PROHIBIDO incluir puntualidad, orden u otros criterios conductuales en la rúbrica.`;
+    return null;
+  }
+
+  function specS6(k) {
+    const p = PERFILES[k] || PERFILES.segundoCiclo;
+    const e = p.escalaAuto;
+    return `Genera SOLO la parte variable de la Sección 6 "¿Cómo me fue? / Autoevaluación". La escala (${e[1]} / ${e[3]} / ${e[5]}) YA está impresa: NO la repitas ni la describas.
+Incluye:
+1. ${esPequeno(k) ? 'Instrucción "Adulto: lea cada frase; el niño colorea la carita."' : 'Instrucción breve.'}
+2. Tabla con 3 a 5 ítems "${esPequeno(k) ? 'Yo puedo… (en español)' : 'I can… (con traducción)'}" y columnas: Ítem | ${e[0]} | ${e[2]} | ${e[4]} (celdas con ☐).
+3. ${k === 'preescolar' ? 'Una pregunta final para dibujar: "¿Qué te gustó más? Dibújalo."' : '2 o 3 preguntas de reflexión cortas.'}
+Formato: HTML simple. Máx. 150 palabras.`;
+  }
+
+  function specS7(k) {
+    return `Genera SOLO la Sección 7 "Recursos y Glosario". Incluye:
+1. GLOSARIO: tabla con las palabras y frases del vocabulario de la Sección 3. Columnas: Inglés | Se pronuncia | Español${esPequeno(k) ? '' : ' | Ejemplo'}.
+2. NOTA PARA LA FAMILIA: 4 a 6 viñetas prácticas (sesiones cortas, repetir y jugar, corregir repitiendo el modelo sin decir "no", celebrar, escuchar la pronunciación en un traductor si hay celular, qué entregar).
+3. RESPUESTAS (PARA EL ADULTO): la clave de cada actividad con respuesta única de las Secciones 3 y 4 (usa el contenido que se te da abajo).
+4. RECURSOS OPCIONALES: 2 sugerencias, primero sin conexión (juego, canción) y marcadas como opcionales.
+Formato: HTML simple.`;
+  }
+
+  function specS8Extra(k) {
+    if (!esPequeno(k)) return '';
+    return `\nNIVEL: ${PERFILES[k].extension} Máximo 2 a 3 pasos por actividad, dirigidos al adulto, con pronunciación en las frases en inglés.`;
+  }
+
+  return { PERFILES, ESCALA_NUM, clave, tarjetaNivel, esPequeno, bloquePrompt, specS1, specS2, specS3, specS4, specS5, specS6, specS7, specS8Extra,
+    PEDIR_CONTINUACION: 'Tu respuesta anterior se cortó por límite de longitud. Continúa EXACTAMENTE desde el último carácter, sin repetir nada, sin saludos ni explicaciones, y cierra todas las etiquetas HTML abiertas.' };
+})();
+
+
+/* ==== GeMA · ilustraciones para colorear (PanaMentorLabs) ==== */
+const GEMA_IMG={"cat":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M140 168 C178 162 182 118 160 104\" fill=\"none\" stroke-width=\"9\"/><ellipse cx=\"100\" cy=\"145\" rx=\"45\" ry=\"40\" fill=\"#fff\"/><polygon points=\"64,62 60,18 92,44\" fill=\"#fff\"/><polygon points=\"136,62 140,18 108,44\" fill=\"#fff\"/><circle cx=\"100\" cy=\"82\" r=\"42\" fill=\"#fff\"/><ellipse cx=\"84\" cy=\"76\" rx=\"4.5\" ry=\"7\" fill=\"#000\"/><ellipse cx=\"116\" cy=\"76\" rx=\"4.5\" ry=\"7\" fill=\"#000\"/><polygon points=\"94,92 106,92 100,99\" fill=\"#000\" stroke-width=\"3\"/><path d=\"M100 99 Q93 109 86 103 M100 99 Q107 109 114 103\" fill=\"none\" stroke-width=\"3.5\"/><path d=\"M56 90 L80 94 M56 102 L80 100 M144 90 L120 94 M144 102 L120 100\" stroke-width=\"3\"/><ellipse cx=\"84\" cy=\"184\" rx=\"13\" ry=\"8\" fill=\"#fff\"/><ellipse cx=\"116\" cy=\"184\" rx=\"13\" ry=\"8\" fill=\"#fff\"/></g></svg>","dog":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M140 150 Q170 138 166 108\" fill=\"none\" stroke-width=\"9\"/><ellipse cx=\"100\" cy=\"150\" rx=\"42\" ry=\"37\" fill=\"#fff\"/><circle cx=\"100\" cy=\"84\" r=\"40\" fill=\"#fff\"/><ellipse cx=\"62\" cy=\"90\" rx=\"14\" ry=\"30\" transform=\"rotate(18 62 90)\" fill=\"#fff\"/><ellipse cx=\"138\" cy=\"90\" rx=\"14\" ry=\"30\" transform=\"rotate(-18 138 90)\" fill=\"#fff\"/><circle cx=\"87\" cy=\"78\" r=\"5\" fill=\"#000\"/><circle cx=\"113\" cy=\"78\" r=\"5\" fill=\"#000\"/><ellipse cx=\"100\" cy=\"104\" rx=\"19\" ry=\"14\" fill=\"#fff\"/><ellipse cx=\"100\" cy=\"97\" rx=\"8\" ry=\"6\" fill=\"#000\"/><path d=\"M100 103 L100 110 M100 110 Q92 116 87 111 M100 110 Q108 116 113 111\" fill=\"none\" stroke-width=\"3.5\"/><ellipse cx=\"84\" cy=\"184\" rx=\"13\" ry=\"8\" fill=\"#fff\"/><ellipse cx=\"116\" cy=\"184\" rx=\"13\" ry=\"8\" fill=\"#fff\"/></g></svg>","cow":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M72 50 C58 40 58 22 72 16 C70 30 80 40 90 44 Z\" fill=\"#fff\"/><path d=\"M128 50 C142 40 142 22 128 16 C130 30 120 40 110 44 Z\" fill=\"#fff\"/><ellipse cx=\"44\" cy=\"72\" rx=\"24\" ry=\"11\" transform=\"rotate(-15 44 72)\" fill=\"#fff\"/><ellipse cx=\"156\" cy=\"72\" rx=\"24\" ry=\"11\" transform=\"rotate(15 156 72)\" fill=\"#fff\"/><ellipse cx=\"100\" cy=\"95\" rx=\"48\" ry=\"58\" fill=\"#fff\"/><path d=\"M62 70 C60 50 80 42 96 50 C104 62 90 76 76 80 C68 82 63 78 62 70 Z\" fill=\"#000\" stroke-width=\"2\"/><circle cx=\"80\" cy=\"96\" r=\"6\" fill=\"#000\"/><circle cx=\"120\" cy=\"96\" r=\"6\" fill=\"#000\"/><ellipse cx=\"100\" cy=\"142\" rx=\"42\" ry=\"27\" fill=\"#fff\"/><ellipse cx=\"85\" cy=\"142\" rx=\"6\" ry=\"9\" fill=\"#000\"/><ellipse cx=\"115\" cy=\"142\" rx=\"6\" ry=\"9\" fill=\"#000\"/><path d=\"M88 160 Q100 166 112 160\" fill=\"none\" stroke-width=\"3.5\"/></g></svg>","duck":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><polygon points=\"148,122 180,106 166,146\" fill=\"#fff\"/><ellipse cx=\"105\" cy=\"142\" rx=\"62\" ry=\"34\" fill=\"#fff\"/><circle cx=\"62\" cy=\"84\" r=\"28\" fill=\"#fff\"/><path d=\"M38 86 Q10 86 14 98 Q28 106 42 98 Z\" fill=\"#fff\"/><circle cx=\"60\" cy=\"77\" r=\"4.5\" fill=\"#000\"/><path d=\"M92 132 Q122 112 150 134 Q122 158 92 132 Z\" fill=\"#fff\"/><path d=\"M10 184 q15 -9 30 0 t30 0 t30 0 t30 0 t30 0 t30 0\" fill=\"none\" stroke-width=\"4\"/></g></svg>","hen":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><polygon points=\"148,108 170,70 182,98 160,128\" fill=\"#fff\"/><ellipse cx=\"105\" cy=\"125\" rx=\"55\" ry=\"44\" fill=\"#fff\"/><path d=\"M95 168 L95 186 M85 190 L95 186 L104 190 M118 168 L118 186 M108 190 L118 186 L127 190\" fill=\"none\" stroke-width=\"4\"/><path d=\"M58 56 q3 -12 10 -3 q4 -12 10 -2 q5 -9 8 4 Z\" fill=\"#fff\"/><circle cx=\"70\" cy=\"76\" r=\"25\" fill=\"#fff\"/><polygon points=\"47,70 30,77 47,84\" fill=\"#fff\"/><ellipse cx=\"50\" cy=\"94\" rx=\"5\" ry=\"8\" fill=\"#fff\" stroke-width=\"4\"/><circle cx=\"66\" cy=\"70\" r=\"4.5\" fill=\"#000\"/><path d=\"M92 118 Q120 102 142 122 Q118 148 92 118 Z\" fill=\"#fff\"/><ellipse cx=\"168\" cy=\"178\" rx=\"13\" ry=\"16\" fill=\"#fff\" stroke-width=\"4\"/></g></svg>","rooster":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M128 122 C132 48 196 36 192 98 C178 72 162 82 150 126 Z\" fill=\"#fff\"/><path d=\"M140 134 C166 96 200 106 188 148 C176 128 162 130 150 144 Z\" fill=\"#fff\"/><path d=\"M136 112 C150 70 176 62 178 80 C164 78 152 92 146 118 Z\" fill=\"#fff\"/><ellipse cx=\"108\" cy=\"132\" rx=\"46\" ry=\"38\" fill=\"#fff\"/><path d=\"M100 170 L100 188 M89 192 L100 188 L110 192 M120 168 L120 188 M110 192 L120 188 L130 192 M100 178 L93 176 M120 178 L113 176\" fill=\"none\" stroke-width=\"4\"/><path d=\"M52 56 q0 -22 13 -10 q3 -22 16 -8 q6 -20 16 -4 q6 2 0 16 Z\" fill=\"#fff\"/><circle cx=\"74\" cy=\"78\" r=\"26\" fill=\"#fff\"/><polygon points=\"50,72 30,79 50,88\" fill=\"#fff\"/><ellipse cx=\"54\" cy=\"102\" rx=\"8\" ry=\"13\" fill=\"#fff\" stroke-width=\"4\"/><circle cx=\"71\" cy=\"72\" r=\"4.5\" fill=\"#000\"/><path d=\"M92 126 Q122 108 146 128 Q120 156 92 126 Z\" fill=\"#fff\"/></g></svg>","car":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M18 132 L18 106 Q20 95 40 93 L60 92 L80 64 Q85 58 96 58 L134 58 Q146 58 152 66 L170 92 Q186 94 186 106 L186 132 Z\" fill=\"#fff\"/><path d=\"M68 92 L86 68 L110 68 L110 92 Z M118 68 L140 68 L156 92 L118 92 Z\" fill=\"#fff\" stroke-width=\"4\"/><path d=\"M114 96 L114 128 M120 108 L130 108\" fill=\"none\" stroke-width=\"4\"/><circle cx=\"178\" cy=\"108\" r=\"5\" fill=\"#fff\" stroke-width=\"3\"/><circle cx=\"56\" cy=\"134\" r=\"19\" fill=\"#fff\"/><circle cx=\"56\" cy=\"134\" r=\"6\" fill=\"#000\"/><circle cx=\"150\" cy=\"134\" r=\"19\" fill=\"#fff\"/><circle cx=\"150\" cy=\"134\" r=\"6\" fill=\"#000\"/></g></svg>","bus":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><rect x=\"12\" y=\"46\" width=\"176\" height=\"100\" rx=\"12\" fill=\"#fff\"/><rect x=\"24\" y=\"58\" width=\"30\" height=\"30\" rx=\"3\" fill=\"#fff\" stroke-width=\"4\"/><rect x=\"62\" y=\"58\" width=\"30\" height=\"30\" rx=\"3\" fill=\"#fff\" stroke-width=\"4\"/><rect x=\"100\" y=\"58\" width=\"30\" height=\"30\" rx=\"3\" fill=\"#fff\" stroke-width=\"4\"/><rect x=\"142\" y=\"58\" width=\"36\" height=\"72\" rx=\"3\" fill=\"#fff\" stroke-width=\"4\"/><path d=\"M160 60 L160 128 M12 106 L142 106\" fill=\"none\" stroke-width=\"4\"/><circle cx=\"184\" cy=\"134\" r=\"4\" fill=\"#fff\" stroke-width=\"3\"/><circle cx=\"52\" cy=\"148\" r=\"18\" fill=\"#fff\"/><circle cx=\"52\" cy=\"148\" r=\"6\" fill=\"#000\"/><circle cx=\"148\" cy=\"148\" r=\"18\" fill=\"#fff\"/><circle cx=\"148\" cy=\"148\" r=\"6\" fill=\"#000\"/></g></svg>","bike":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><circle cx=\"48\" cy=\"132\" r=\"36\" fill=\"#fff\" stroke-width=\"6\"/><circle cx=\"48\" cy=\"132\" r=\"26\" fill=\"none\" stroke-width=\"3\"/><circle cx=\"48\" cy=\"132\" r=\"4\" fill=\"#000\"/><circle cx=\"152\" cy=\"132\" r=\"36\" fill=\"#fff\" stroke-width=\"6\"/><circle cx=\"152\" cy=\"132\" r=\"26\" fill=\"none\" stroke-width=\"3\"/><circle cx=\"152\" cy=\"132\" r=\"4\" fill=\"#000\"/><path d=\"M48 132 L95 132 L138 82 L80 82 Z M95 132 L76 66 M138 82 L152 132 M138 82 L132 58 L150 52\" fill=\"none\" stroke=\"#000\" stroke-width=\"16\"/><path d=\"M48 132 L95 132 L138 82 L80 82 Z M95 132 L76 66 M138 82 L152 132 M138 82 L132 58 L150 52\" fill=\"none\" stroke=\"#fff\" stroke-width=\"8\"/><path d=\"M60 62 Q76 56 94 62 Q78 70 60 62 Z\" fill=\"#fff\" stroke-width=\"4\"/><circle cx=\"95\" cy=\"132\" r=\"8\" fill=\"#fff\" stroke-width=\"4\"/></g></svg>","truck":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><rect x=\"12\" y=\"52\" width=\"112\" height=\"86\" rx=\"4\" fill=\"#fff\"/><path d=\"M124 138 L124 74 L160 74 L188 106 L188 138 Z\" fill=\"#fff\"/><path d=\"M134 82 L156 82 L176 106 L134 106 Z\" fill=\"#fff\" stroke-width=\"4\"/><rect x=\"182\" y=\"120\" width=\"10\" height=\"10\" fill=\"#fff\" stroke-width=\"3\"/><circle cx=\"42\" cy=\"142\" r=\"17\" fill=\"#fff\"/><circle cx=\"42\" cy=\"142\" r=\"5\" fill=\"#000\"/><circle cx=\"92\" cy=\"142\" r=\"17\" fill=\"#fff\"/><circle cx=\"92\" cy=\"142\" r=\"5\" fill=\"#000\"/><circle cx=\"160\" cy=\"142\" r=\"17\" fill=\"#fff\"/><circle cx=\"160\" cy=\"142\" r=\"5\" fill=\"#000\"/></g></svg>","train":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><circle cx=\"62\" cy=\"30\" r=\"10\" fill=\"#fff\" stroke-width=\"3.5\"/><circle cx=\"80\" cy=\"18\" r=\"13\" fill=\"#fff\" stroke-width=\"3.5\"/><circle cx=\"102\" cy=\"12\" r=\"9\" fill=\"#fff\" stroke-width=\"3.5\"/><path d=\"M50 82 L44 46 L74 46 L68 82 Z\" fill=\"#fff\"/><rect x=\"28\" y=\"80\" width=\"96\" height=\"58\" rx=\"6\" fill=\"#fff\"/><polygon points=\"28,138 10,156 30,156\" fill=\"#fff\"/><rect x=\"120\" y=\"52\" width=\"62\" height=\"86\" fill=\"#fff\"/><rect x=\"110\" y=\"42\" width=\"80\" height=\"13\" rx=\"3\" fill=\"#fff\"/><rect x=\"136\" y=\"66\" width=\"30\" height=\"28\" fill=\"#fff\" stroke-width=\"4\"/><circle cx=\"18\" cy=\"108\" r=\"7\" fill=\"#fff\" stroke-width=\"3.5\"/><path d=\"M4 176 L196 176\" fill=\"none\" stroke-width=\"5\"/><circle cx=\"56\" cy=\"152\" r=\"15\" fill=\"#fff\"/><circle cx=\"96\" cy=\"152\" r=\"15\" fill=\"#fff\"/><circle cx=\"154\" cy=\"150\" r=\"22\" fill=\"#fff\"/><circle cx=\"154\" cy=\"150\" r=\"6\" fill=\"#000\"/></g></svg>"};
+const GEMA_IMG_ALIAS={bicycle:'bike',chicken:'hen',puppy:'dog',kitten:'cat',kitty:'cat',automobile:'car',lorry:'truck',cock:'rooster'};
+function gemaImgKey(w){let k=String(w||'').toLowerCase().trim();if(GEMA_IMG_ALIAS[k])k=GEMA_IMG_ALIAS[k];if(!GEMA_IMG[k]&&k.endsWith('s')&&GEMA_IMG[k.slice(0,-1)])k=k.slice(0,-1);return GEMA_IMG[k]?k:null;}
+function gemaImgs(html){
+  return String(html||'').replace(/\[\[IMG:\s*([^\]]+?)\s*\]\]/gi,(m,w)=>{
+    const k=gemaImgKey(w);const safe=String(w).replace(/[<>"]/g,'');
+    if(k)return `<img class="gema-img" alt="${safe}" src="data:image/svg+xml;base64,${btoa(GEMA_IMG[k])}"/>`;
+    return `<span class="gema-draw">✏️ Dibuja:<br><b>${safe}</b></span>`;
+  });
+}
+function gemaSvgToPng(src,px=300){
+  return new Promise(res=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=px;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,px,px);x.drawImage(im,0,0,px,px);c.toBlob(b=>b?b.arrayBuffer().then(ab=>res(new Uint8Array(ab))):res(null),'image/png');};im.onerror=()=>res(null);im.src=src;});
+}
+/* Grado: agrega ° solo si es un número (evita "Kindergarten°") */
+function gradoLbl(g){g=String(g||'').trim();return /^\d+\s*°?$/.test(g)?g.replace(/\s*°/,'')+'°':g;}
+function gemaTexto(html){
+  return String(html||'').replace(/<\/t[dh]>/gi,' | ').replace(/<\/(p|li|tr|h\d|blockquote|div|table|ol|ul)>/gi,'\n').replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/[ \t]+/g,' ').replace(/\n\s*\n+/g,'\n').trim();
+}
+</script>
+<script>
 if(typeof pdfjsLib!=='undefined'){
   pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
@@ -601,14 +871,35 @@ async function callAI(prompt,maxTokens=1200){
     ?'https://api.groq.com/openai/v1/chat/completions'
     :'https://api.deepseek.com/chat/completions';
   const model=state.api==='groq'?'llama-3.3-70b-versatile':'deepseek-chat';
-  const res=await fetch(endpoint,{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+state.apiKey},
-    body:JSON.stringify({model,max_tokens:maxTokens,temperature:0.4,messages:[{role:'user',content:prompt}]})
-  });
-  if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'Error de API');}
-  const data=await res.json();
-  return data.choices[0].message.content.trim();
+  maxTokens=Math.min(maxTokens,8000);
+  const post=async(messages)=>{
+    for(let intento=0;intento<4;intento++){
+      const res=await fetch(endpoint,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+state.apiKey},
+        body:JSON.stringify({model,max_tokens:maxTokens,temperature:0.4,messages})
+      });
+      if(res.status===429&&intento<3){
+        let e={};try{e=await res.json();}catch(_){}
+        const m=/try again in ([\d.]+)s/i.exec(e.error?.message||'');
+        const seg=Math.min(60,Math.ceil(m?parseFloat(m[1]):(parseFloat(res.headers.get('retry-after'))||15))+1);
+        showToast(`⏳ Límite de la API: reintentando en ${seg} s…`);
+        await new Promise(r=>setTimeout(r,seg*1000));continue;
+      }
+      if(!res.ok){let e={};try{e=await res.json();}catch(_){}throw new Error(e.error?.message||'Error de API');}
+      return res.json();
+    }
+  };
+  let out='';let messages=[{role:'user',content:prompt}];
+  for(let parte=0;parte<3;parte++){
+    const data=await post(messages);
+    const ch=data.choices[0];
+    out+=(ch.message.content||'');
+    if(ch.finish_reason!=='length')break;
+    // La respuesta se cortó por límite de tokens: pedir la continuación
+    messages=[{role:'user',content:prompt},{role:'assistant',content:out},{role:'user',content:GEMA_NIVELES.PEDIR_CONTINUACION}];
+  }
+  return out.trim();
 }
 
 async function extractWithAI(text){
@@ -618,7 +909,7 @@ Analiza el siguiente texto de un plan de clase y extrae los datos en formato JSO
 Responde ÚNICAMENTE con el JSON, sin explicaciones ni markdown.
 
 JSON esperado:
-{"asignatura":"","grado":"","nivel":"Primaria|Premedia|Media","trimestre":"I Trimestre|II Trimestre|III Trimestre","tema":"","docente":"","contenidos":"","indicadores":[""],"actividades":""}
+{"asignatura":"","grado":"","nivel":"Preescolar|Primaria|Premedia|Media","trimestre":"I Trimestre|II Trimestre|III Trimestre","tema":"","docente":"","contenidos":"","indicadores":[""],"actividades":""}
 
 Reglas:
 - indicadores: solo indicadores de logro académicos (excluir puntualidad, orden, limpieza)
@@ -676,12 +967,20 @@ function selectUso(card,val){
   card.classList.add('selected');
   state.uso=val;
 }
+function autoNivel(){
+  const g=document.getElementById('f_grado').value;if(!g.trim())return;
+  const k=GEMA_NIVELES.clave(g,null,document.getElementById('f_nivel').value);
+  if(k==='preescolar')document.getElementById('f_nivel').value='Preescolar';
+  else if(document.getElementById('f_nivel').value==='Preescolar')document.getElementById('f_nivel').value='Primaria';
+  const card=document.querySelector(`#nivelGrid .option-card[data-val="${GEMA_NIVELES.tarjetaNivel(k)}"]`);
+  if(card)selectNivel(card,card.dataset.val);
+}
 function selectNivel(card,val){document.querySelectorAll('#nivelGrid .option-card').forEach(c=>c.classList.remove('selected'));card.classList.add('selected');state.nivel=val;}
 function selectIdioma(card,val){document.querySelectorAll('#idiomaGrid .option-card').forEach(c=>c.classList.remove('selected'));card.classList.add('selected');state.idioma=val;}
 function toggleFormato(card,val){card.classList.toggle('selected');if(card.classList.contains('selected')){if(!state.formatos.includes(val))state.formatos.push(val);}else{state.formatos=state.formatos.filter(f=>f!==val);}}
 
 function buildSummary(){
-  const nivelLabel={'1-3':'Grados 1°–3°','4-6':'Grados 4°–6°','secundaria':'Secundaria'};
+  const nivelLabel={'pk':'Preescolar (Pre-K / K)','1-3':'Grados 1°–3°','4-6':'Grados 4°–6°','secundaria':'Secundaria'};
   const idiomaLabel={'es':'Español','en':'Inglés','bi':'Bilingüe'};
   const fmtIcons={pdf:'📄 PDF',word:'📝 Word',html:'🌐 HTML'};
   const inds=getIndicadores();
@@ -695,6 +994,7 @@ function buildSummary(){
     ['Tema / Unidad',document.getElementById('f_tema').value],
     ['Indicadores',inds.map(i=>`<span class="ind-tag">${i}</span>`).join(' ')||'<em>—</em>'],
     ['Complejidad visual',nivelLabel[state.nivel]],
+    ['Reglas pedagógicas',(()=>{const k=GEMA_NIVELES.clave(document.getElementById('f_grado').value,state.nivel,document.getElementById('f_nivel').value);return k==='secundaria'?'Secundaria':GEMA_NIVELES.PERFILES[k].etiqueta;})()],
     ['Idioma',idiomaLabel[state.idioma]],
     ['Exportar como',state.formatos.map(f=>`<span class="fmt-tag">${fmtIcons[f]}</span>`).join('')||'<em>Ninguno</em>'],
     ['Modalidad',{'completo':'🏠 Autoinstrucción completa','pre-invertida':'🔀 Aula pre-invertida','semi-invertida':'⚡ Aula semi-invertida','refuerzo':'🏫 Refuerzo en aula'}[state.uso]]
@@ -755,7 +1055,8 @@ The ONLY exception: in vocabulary tables, you may add a short Spanish translatio
 If you write any instructional sentence in Spanish, you have FAILED this task. Re-read every sentence before responding and confirm it is in English.`,
     bi:'IMPORTANTE: Genera las INSTRUCCIONES, explicaciones y notas para el tutor en ESPAÑOL, pero el CONTENIDO ACADÉMICO (vocabulario, textos de lectura, oraciones modelo, ejercicios) en INGLÉS. No mezcles: cada parte debe estar completamente en su idioma correspondiente.'
   }[f.idioma];
-  const nivelTxt={'1-3':'primaria baja (1°-3°): usa lenguaje muy simple, muchos ejemplos visuales descritos, actividades concretas','4-6':'primaria alta (4°-6°): balance entre texto e imagen, gramática básica, producción escrita','secundaria':'secundaria: lenguaje académico, análisis, terminología formal'}[f.nivelVisual];
+  const nk=GEMA_NIVELES.clave(f.grado,f.nivelVisual,f.nivel);
+  const nivelTxt={'pk':'preescolar (Pre-K/Kinder): no lee ni escribe; todo mediado por un adulto','1-3':'primaria baja (1°-3°): usa lenguaje muy simple, muchos ejemplos visuales descritos, actividades concretas','4-6':'primaria alta (4°-6°): balance entre texto e imagen, gramática básica, producción escrita','secundaria':'secundaria: lenguaje académico, análisis, terminología formal'}[f.nivelVisual];
   const indsStr=f.indicadores.map((ind,i)=>`${i+1}. ${ind}`).join('\n');
   
   const baseCtx=`
@@ -764,7 +1065,7 @@ ${idiomaDirectiva}
 Datos del módulo:
 - Escuela: ${f.escuela}, Región: ${f.region}
 - Docente: ${f.docente}, Año: ${f.anio}
-- Asignatura: ${f.asignatura}, Grado: ${f.grado}°, Nivel: ${f.nivel}
+- Asignatura: ${f.asignatura}, Grado: ${gradoLbl(f.grado)}, Nivel: ${f.nivel}
 - Trimestre: ${f.trimestre}, Tema: ${f.tema}
 - Contenidos: ${f.contenidos}
 - Indicadores de logro:
@@ -773,7 +1074,12 @@ ${indsStr}
 - Nivel de complejidad: ${nivelTxt}
 - Idioma: ${idiomaTxt}
 - Modalidad de uso: ${{'completo':'Autoinstrucción completa (todo en casa, sin docente presente)','pre-invertida':'Aula pre-invertida (Secciones 1-3 en casa, Secciones 4-5 en el aula con el docente)','semi-invertida':'Aula semi-invertida (Sección 1-2 en casa, Secciones 3-5 en el aula con el docente)','refuerzo':'Refuerzo en aula (todo con el docente presente)'}[f.uso]}
+
+${GEMA_NIVELES.bloquePrompt(nk)}
 `;
+  const FMT='Responde SOLO el HTML de contenido. SIN estilos inline. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.';
+  const ctxS3=()=>sections.s3?`\nCONTENIDO YA GENERADO EN LA SECCIÓN 3 (usa EXACTAMENTE este vocabulario, estas frases y este texto; no agregues palabras nuevas):\n"""\n${gemaTexto(sections.s3).slice(0,4500)}\n"""\n`:'';
+  const ctxS4=()=>sections.s4?`\nCONTENIDO DE LA SECCIÓN 4 (para la clave de respuestas):\n"""\n${gemaTexto(sections.s4).slice(0,4500)}\n"""\n`:'';
 
   // Section labels and tone based on uso
   const usoLabels = {
@@ -783,6 +1089,7 @@ ${indsStr}
     'refuerzo':      {s2:'🏫 Para hacer en el aula',s3:'🏫 Para hacer en el aula',s4:'🏫 Para hacer en el aula',s5:'🏫 Para hacer en el aula'}
   };
   const usoLbl = usoLabels[f.uso]||usoLabels['completo'];
+  const sections={};
 
   const usoToneS2 = f.uso==='completo'||f.uso==='pre-invertida'
     ? 'El estudiante trabajará SOLO en casa con ayuda del tutor. Las instrucciones deben ser muy claras, con ejemplos resueltos, para que un adulto sin formación docente pueda guiar al estudiante.'
@@ -794,32 +1101,16 @@ ${indsStr}
 
   const usoToneS4 = f.uso==='semi-invertida'||f.uso==='refuerzo'||f.uso==='pre-invertida'
     ? 'IMPORTANTE: Estas actividades se realizarán EN EL AULA con el docente. Incluir actividades de interacción entre pares (pair work), momentos de retroalimentación docente, y actividades de producción oral grupal además de las individuales.'
-    : 'IMPORTANTE: Estas actividades se realizarán EN CASA. Cada actividad debe ser completamente autónoma. Incluir respuestas modelo o banco de palabras para que el estudiante pueda autocorregirse.';
+    : 'IMPORTANTE: Estas actividades se realizarán EN CASA. Cada actividad debe ser completamente autónoma. Incluir ejemplos resueltos y bancos de palabras; la clave de respuestas completa va en la Sección 7, no junto a los ejercicios.';
 
-  const sections={};
 
-  setGenStep(0,'done');setGenStep(1,'done');setGenStep(2,'active');
-  sections.s2=cleanHTML(await callAI(`${baseCtx}
-${usoToneS2}
-Genera SOLO la Sección 2 "¡Empecemos! / Saberes Previos" de un módulo de autoinstrucción MEDUCA.
-IMPORTANTE: Cada actividad debe activar conocimientos previos que preparen al estudiante para alcanzar los INDICADORES DE LOGRO listados arriba. No generes actividades genéricas — cada una debe conectar directamente con al menos uno de los indicadores.
-OBLIGATORIO incluir EXACTAMENTE estas 3 actividades:
-
-1. 🎧 LISTENING — Activación auditiva (alineada a indicadores de escucha/comprensión oral):
-   El tutor lee 3 oraciones cortas relacionadas al tema. El estudiante escucha y realiza la acción indicada (señalar, circular, numerar). Escribe las 3 oraciones exactas basadas en el vocabulario y estructuras de los indicadores.
-
-2. 🗣️ SPEAKING — Activación oral (alineada a indicadores de producción oral):
-   Muestra 3 situaciones/imágenes descritas en texto. El estudiante dice en voz alta lo que observa usando palabras del tema. Cada situación debe conectar con un indicador de logro específico.
-
-3. 🤔 SABERES PREVIOS — Conexión con conocimiento previo:
-   2-3 preguntas que conecten lo que el estudiante ya sabe con lo que va a aprender según los indicadores. Incluir una actividad de predicción ("¿Qué crees que vas a aprender hoy?").
-
-Formato: HTML semántico con <h3> para cada actividad, <ol> para ítems, <p> para instrucciones. SIN estilos inline. Mínimo 300 palabras.
-Responde SOLO el HTML de contenido, sin head ni body. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.`,900));
-  setGenStep(2,'done');
-
+  setGenStep(0,'done');
   setGenStep(3,'active');
-  sections.s3=cleanHTML(await callAI(`${baseCtx}
+  const sp3=GEMA_NIVELES.specS3(nk);
+  sections.s3=cleanHTML(await callAI(sp3?`${baseCtx}
+${usoToneS3}
+${sp3}
+${FMT}`:`${baseCtx}
 ${usoToneS3}
 Genera SOLO la Sección 3 "¡Aprendamos! / Contenido" del módulo.
 IMPORTANTE: Todo el contenido debe enseñar exactamente lo que los INDICADORES DE LOGRO exigen. Antes de generar cada parte, identifica qué indicadores cubre. No incluyas vocabulario, estructuras o textos que no estén directamente relacionados con los indicadores listados arriba.
@@ -839,11 +1130,48 @@ OBLIGATORIO incluir TODAS estas partes, cada una etiquetada con qué indicadores
    Explicación simple de la estructura que los indicadores exigen producir, con exactamente 3 ejemplos tomados del contexto de los indicadores de logro.
 
 Formato: HTML semántico con <h3> etiquetado con los indicadores que cubre, <table> para vocabulario, <blockquote> para texto. SIN estilos inline. Mínimo 450 palabras.
-Responde SOLO el HTML de contenido. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.`,1500));
+Responde SOLO el HTML de contenido. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.`,3500));
   setGenStep(3,'done');
 
+  setGenStep(2,'active');
+  const sp2=GEMA_NIVELES.specS2(nk);
+  sections.s2=cleanHTML(await callAI(sp2?`${baseCtx}${ctxS3()}
+${usoToneS2}
+${sp2}
+${FMT}`:`${baseCtx}${ctxS3()}
+${usoToneS2}
+Genera SOLO la Sección 2 "¡Empecemos! / Saberes Previos" de un módulo de autoinstrucción MEDUCA.
+IMPORTANTE: Cada actividad debe activar conocimientos previos que preparen al estudiante para alcanzar los INDICADORES DE LOGRO listados arriba. No generes actividades genéricas — cada una debe conectar directamente con al menos uno de los indicadores.
+OBLIGATORIO incluir EXACTAMENTE estas 3 actividades:
+
+1. 🎧 LISTENING — Activación auditiva (alineada a indicadores de escucha/comprensión oral):
+   El tutor lee 3 oraciones cortas relacionadas al tema. El estudiante escucha y realiza la acción indicada (señalar, circular, numerar). Escribe las 3 oraciones exactas basadas en el vocabulario y estructuras de los indicadores.
+
+2. 🗣️ SPEAKING — Activación oral (alineada a indicadores de producción oral):
+   Muestra 3 situaciones/imágenes descritas en texto. El estudiante dice en voz alta lo que observa usando palabras del tema. Cada situación debe conectar con un indicador de logro específico.
+
+3. 🤔 SABERES PREVIOS — Conexión con conocimiento previo:
+   2-3 preguntas que conecten lo que el estudiante ya sabe con lo que va a aprender según los indicadores. Incluir una actividad de predicción ("¿Qué crees que vas a aprender hoy?").
+
+Formato: HTML semántico con <h3> para cada actividad, <ol> para ítems, <p> para instrucciones. SIN estilos inline. Mínimo 300 palabras.
+Responde SOLO el HTML de contenido, sin head ni body. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.`,2000));
+  setGenStep(2,'done');
+  setGenStep(1,'active');
+  if(nk!=='secundaria'){
+    sections.s1=cleanHTML(await callAI(`${baseCtx}${ctxS3()}
+${GEMA_NIVELES.specS1(nk)}
+${FMT}`,1500));
+  }
+  setGenStep(1,'done');
+
+
+
   setGenStep(4,'active');
-  sections.s4=cleanHTML(await callAI(`${baseCtx}
+  const sp4=GEMA_NIVELES.specS4(nk);
+  sections.s4=cleanHTML(await callAI(sp4?`${baseCtx}${ctxS3()}
+${usoToneS4}
+${sp4}
+${FMT}`:`${baseCtx}${ctxS3()}
 Genera SOLO la Sección 4 "¡Practiquemos! / Actividades" del módulo.
 REGLA FUNDAMENTAL: Cada actividad debe estar diseñada para que el estudiante practique y demuestre el logro de los INDICADORES DE LOGRO listados arriba. Antes de escribir cada actividad, identifica explícitamente qué indicador(es) practica. Los ejercicios deben usar exactamente el vocabulario, las estructuras y los contextos descritos en los indicadores — no inventar situaciones ajenas al tema.
 
@@ -871,11 +1199,14 @@ OBLIGATORIO incluir EXACTAMENTE estas 5 actividades, cada una con 3 ítems y su 
 
 Para cada actividad incluir: ícono + nombre de habilidad, indicador(es) que practica entre paréntesis, instrucción clara, 3 ítems numerados con el contenido exacto, y ejemplo resuelto del ítem 1.
 Formato: HTML semántico con <h3> para cada actividad, <ol> para ítems, <p class="indicador-ref"> para la referencia al indicador. SIN estilos inline. Mínimo 600 palabras.
-Responde SOLO el HTML de contenido. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.`,2000));
+Responde SOLO el HTML de contenido. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.`,4500));
   setGenStep(4,'done');
 
   setGenStep(5,'active');
-  sections.s5=cleanHTML(await callAI(`${baseCtx}
+  const sp5=GEMA_NIVELES.specS5(nk);
+  sections.s5=cleanHTML(await callAI(sp5?`${baseCtx}${ctxS3()}${ctxS4()}
+${sp5}
+${FMT}`:`${baseCtx}${ctxS3()}${ctxS4()}
 Genera SOLO la Sección 5 "¡Demostremos! / Evaluación" del módulo.
 REGLA FUNDAMENTAL: La rúbrica debe evaluar ÚNICAMENTE el logro de los INDICADORES DE LOGRO listados arriba. Cada criterio de la rúbrica debe derivarse directamente de uno o más indicadores — no inventes criterios genéricos. Los descriptores de cada nivel deben describir exactamente qué tan bien el estudiante demuestra el indicador.
 
@@ -892,38 +1223,30 @@ OBLIGATORIO incluir:
 3. NOTA DE CORTESÍA (fuera de la rúbrica, en <p>):
    Recordatorio amable al estudiante y tutor de devolver el módulo con puntualidad y en buen estado, aclarando explícitamente que esto NO afecta la calificación sino que refleja responsabilidad y respeto.
 
-Formato: HTML con <table> para la rúbrica. SIN estilos inline. Responde SOLO el HTML de contenido. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.`,1500));
+Formato: HTML con <table> para la rúbrica. SIN estilos inline. Responde SOLO el HTML de contenido. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.`,2500));
   setGenStep(5,'done');
 
   setGenStep(6,'active');
-  sections.s6=cleanHTML(await callAI(`${baseCtx}
-Genera SOLO la Sección 6 "¿Cómo me fue? / Autoevaluación" del módulo.
-Incluye:
-1. Escala descriptiva de 3 niveles (Lo logré / Casi lo logro / Necesito ayuda) con descripción breve para cada uno
-2. 2-3 preguntas de metacognición simples (¿Qué fue lo más difícil? ¿Qué estrategia usé?)
-Formato: HTML simple. Máx 200 palabras.
-Responde SOLO el HTML de contenido. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.`,600));
+  sections.s6=cleanHTML(await callAI(`${baseCtx}${ctxS3()}
+${GEMA_NIVELES.specS6(nk)}
+${FMT}`,1200));
   setGenStep(6,'done');
 
   setGenStep(7,'active');
-  sections.s7=cleanHTML(await callAI(`${baseCtx}
-Genera SOLO la Sección 7 "Recursos y Glosario" del módulo.
-Incluye:
-1. Glosario de 6-8 términos clave del tema con definición simple
-2. Nota para el tutor (orientaciones breves sobre cómo acompañar al estudiante en casa)
-3. Recursos opcionales (2-3 sugerencias: canciones, videos, actividades - marcadas como opcionales por conectividad)
-Formato: HTML simple. Responde SOLO el HTML de contenido. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.`,700));
+  sections.s7=cleanHTML(await callAI(`${baseCtx}${ctxS3()}${ctxS4()}
+${GEMA_NIVELES.specS7(nk)}
+${FMT}`,2500));
   setGenStep(7,'done');
 
   if(f.extQty>0&&f.extTypes.length>0){
     const tiposMap={ejercicios:'Ejercicios AOA avanzados (práctica adicional de las 5 habilidades: Listening, Reading, Writing, Speaking, Mediation, con mayor complejidad que la Sección 4)',creativos:'Actividades creativas (dibujar, crear, diseñar, componer, expresar artísticamente relacionado con el tema)',mapa:'Mapa mental o conceptual (organizar visualmente el vocabulario e ideas del tema)',proyecto:'Proyecto o investigación (explorar el tema en profundidad, investigar, presentar hallazgos)',roleplay:'Role play o dramatización (escenas, diálogos o actuación usando el lenguaje del tema)',reto:'Reto o problema desafiante (ejercicio que exige pensamiento crítico o resolución de problemas)'};
     const tiposDesc=f.extTypes.map(t=>tiposMap[t]||t).join('; ');
-    sections.s8=cleanHTML(await callAI(`${baseCtx}
+    sections.s8=cleanHTML(await callAI(`${baseCtx}${ctxS3()}
 Genera SOLO la Sección 8 "Actividades de Extensión" del módulo de autoinstrucción MEDUCA.
 PROPÓSITO: Actividades OPCIONALES más retadoras para estudiantes que quieren profundizar.
 REGLA FUNDAMENTAL: Todas alineadas a los INDICADORES DE LOGRO. No generar actividades genéricas.
 CANTIDAD: Exactamente ${f.extQty} actividades.
-TIPOS SOLICITADOS: ${tiposDesc}
+TIPOS SOLICITADOS: ${tiposDesc}${GEMA_NIVELES.specS8Extra(nk)}
 FORMATO DE CADA ACTIVIDAD:
 - Título con ícono del tipo
 - Indicador que desarrolla (entre paréntesis)
@@ -931,7 +1254,7 @@ FORMATO DE CADA ACTIVIDAD:
 - 3 ítems o pasos concretos
 - Nota final: "⭐ Actividad opcional — ¡para los que quieren ir más lejos!"
 Formato: HTML con <h3> para cada actividad, <ol> para pasos. SIN estilos inline.
-Responde SOLO el HTML de contenido. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.`,f.extQty<=2?900:f.extQty<=4?1500:2000));
+Responde SOLO el HTML de contenido. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.`,f.extQty<=2?1800:f.extQty<=4?3000:4000));
   }
 
   state.generatedSections=sections;
@@ -952,6 +1275,8 @@ function renderModule(sections){
     'refuerzo':      {s2:'🏫 Para hacer en el aula',s3:'🏫 Para hacer en el aula',s4:'🏫 Para hacer en el aula',s5:'🏫 Para hacer en el aula'}
   };
   const usoLbl=_usoLabels[f.uso||'completo'];
+  const nk=GEMA_NIVELES.clave(f.grado,f.nivelVisual,f.nivel);
+  const esc=(GEMA_NIVELES.PERFILES[nk]||GEMA_NIVELES.PERFILES.segundoCiclo).escalaAuto;
 
   const preview=document.getElementById('modulePreview');
   preview.innerHTML=`
@@ -961,7 +1286,7 @@ function renderModule(sections){
       <div class="mod-cover-sub">Módulo de Autoinstrucción${idiomaTit}</div>
       <div class="mod-cover-chips">
         <span class="mod-cover-chip">📚 ${f.asignatura}</span>
-        <span class="mod-cover-chip">🎓 ${f.grado}° · ${f.nivel}</span>
+        <span class="mod-cover-chip">🎓 ${gradoLbl(f.grado)} · ${f.nivel}</span>
         <span class="mod-cover-chip">📅 ${f.trimestre} · ${f.anio}</span>
         <span class="mod-cover-chip">👩‍🏫 ${f.docente}</span>
         <span class="mod-cover-chip">${{'completo':'🏠 Autoinstrucción','pre-invertida':'🔀 Pre-invertida','semi-invertida':'⚡ Semi-invertida','refuerzo':'🏫 Refuerzo'}[f.uso||'completo']}</span>
@@ -972,8 +1297,8 @@ function renderModule(sections){
       <div class="mod-section-label">Sección 1</div>
       <div class="mod-section-title">📋 Presentación del Módulo</div>
       <div class="mod-content">
-        <h4>🎯 ¿Qué vas a aprender?</h4>
-        <ul>${f.indicadores.map(ind=>`<li>${ind}</li>`).join('')}</ul>
+        ${sections.s1||`<h4>🎯 ¿Qué vas a aprender?</h4>
+        <ul>${f.indicadores.map(ind=>`<li>${ind}</li>`).join('')}</ul>`}
         <h4>🗺️ ¿Cómo usar este módulo?</h4>
         <div class="icon-guide">
           <div class="icon-item"><span class="ico">🎧</span> <strong>Escucha</strong> con atención</div>
@@ -984,7 +1309,7 @@ function renderModule(sections){
           <div class="icon-item"><span class="ico">✂️</span> <strong>Recorta</strong> o pega</div>
         </div>
         <p style="margin-top:14px;padding:12px;background:#f0fdf4;border-radius:8px;font-size:13px;">
-          💚 <strong>¡Tú puedes lograrlo!</strong> Lee cada instrucción con calma. Si tienes dudas, pide ayuda a un adulto en casa. ¡Estamos seguros de que lo harás muy bien!
+          ${GEMA_NIVELES.esPequeno(nk)?'💚 <strong>Para la familia:</strong> usted lee las instrucciones y acompaña. Trabajen un día a la vez; lo importante es intentarlo juntos y celebrar cada logro.':'💚 <strong>¡Tú puedes lograrlo!</strong> Lee cada instrucción con calma. Si tienes dudas, pide ayuda a un adulto en casa. ¡Estamos seguros de que lo harás muy bien!'}
         </p>
       </div>
     </div>
@@ -1018,9 +1343,9 @@ function renderModule(sections){
       <div class="mod-section-title">🪞 ¿Cómo me fue? — Autoevaluación</div>
       <div class="mod-content">
         <div class="self-assess">
-          <div class="sa-card green"><div class="sa-icon">✅</div><div class="sa-label">Lo logré</div><div class="sa-desc">Puedo explicar o hacer esto solo/a</div></div>
-          <div class="sa-card yellow"><div class="sa-icon">🔄</div><div class="sa-label">Casi lo logro</div><div class="sa-desc">Lo entiendo pero necesito repasar</div></div>
-          <div class="sa-card red"><div class="sa-icon">🆘</div><div class="sa-label">Necesito ayuda</div><div class="sa-desc">Todavía tengo dudas importantes</div></div>
+          <div class="sa-card green"><div class="sa-icon">${esc[0]}</div><div class="sa-label">${esc[1]}</div><div class="sa-desc">${nk==='preescolar'?'Lo hago solo/a':'Puedo explicar o hacer esto solo/a'}</div></div>
+          <div class="sa-card yellow"><div class="sa-icon">${esc[2]}</div><div class="sa-label">${esc[3]}</div><div class="sa-desc">${nk==='preescolar'?'Lo hago con ayuda':'Lo entiendo pero necesito repasar'}</div></div>
+          <div class="sa-card red"><div class="sa-icon">${esc[4]}</div><div class="sa-label">${esc[5]}</div><div class="sa-desc">${nk==='preescolar'?'Lo seguimos practicando':'Todavía tengo dudas importantes'}</div></div>
         </div>
         ${sections.s6||''}
       </div>
@@ -1041,6 +1366,8 @@ function renderModule(sections){
       <div class="mod-content">${sections.s8}</div>
     </div>`:''}
   `;
+
+  preview.innerHTML=gemaImgs(preview.innerHTML);
 
   const toolbar=document.getElementById('moduleToolbar');
   toolbar.innerHTML='';
@@ -1064,8 +1391,11 @@ function renderModule(sections){
         return;
       }
       try{
-        const {Document,Packer,Paragraph,TextRun,HeadingLevel,AlignmentType,Table,TableRow,TableCell,WidthType,BorderStyle,ShadingType}=docx;
-        const BORDER={style:BorderStyle.SINGLE,size:4,color:'CCCCCC'};
+        const {Document,Packer,Paragraph,TextRun,ImageRun,HeadingLevel,AlignmentType,Table,TableRow,TableCell,WidthType,BorderStyle,ShadingType}=docx;
+        const BORDER={style:BorderStyle.SINGLE,size:6,color:'000000'};
+        const imgMap=new Map();
+        for(const im of document.querySelectorAll('#modulePreview img.gema-img')){if(!imgMap.has(im.src))imgMap.set(im.src,await gemaSvgToPng(im.src));}
+        const imgRun=el=>{const d=imgMap.get(el.src);return d?new ImageRun({type:'png',data:d,transformation:{width:80,height:80}}):new TextRun({text:'['+(el.alt||'imagen')+']'});};
         const CELL_BORDERS={top:BORDER,bottom:BORDER,left:BORDER,right:BORDER};
 
         function collectRuns(node,opts){
@@ -1074,11 +1404,15 @@ function renderModule(sections){
           node.childNodes.forEach(child=>{
             if(child.nodeType===3){
               const t=child.textContent;
-              if(t)runs.push(new TextRun({text:t,bold:!!opts.bold,italics:!!opts.italic,color:opts.color}));
+              if(t)runs.push(new TextRun({text:t,bold:!!opts.bold,italics:!!opts.italic,color:opts.color,size:opts.size}));
             }else if(child.nodeType===1){
               const tag=child.tagName.toLowerCase();
               if(tag==='br'){
                 runs.push(new TextRun({text:'',break:1}));
+              }else if(tag==='img'){
+                runs.push(imgRun(child));
+              }else if(tag==='span'&&child.classList.contains('trace')){
+                runs.push(new TextRun({text:child.textContent,color:'A6A6A6',size:56,font:'Century Gothic'}));
               }else if(tag==='strong'||tag==='b'){
                 runs.push.apply(runs,collectRuns(child,Object.assign({},opts,{bold:true})));
               }else if(tag==='em'||tag==='i'){
@@ -1097,7 +1431,7 @@ function renderModule(sections){
             const cells=[];
             tr.querySelectorAll('th,td').forEach(cell=>{
               const isHeader=cell.tagName.toLowerCase()==='th';
-              const runOpts=isHeader?{bold:true,color:'FFFFFF'}:{};
+              const runOpts=isHeader?{bold:true}:{};
               const cellBlocks=[];
               const blockEls=cell.querySelectorAll('p,div,h1,h2,h3,h4,h5,h6,li');
               if(blockEls.length){
@@ -1112,8 +1446,7 @@ function renderModule(sections){
               if(!cellBlocks.length)cellBlocks.push(new Paragraph({children:[new TextRun({text:''})]}));
               cells.push(new TableCell({
                 children:cellBlocks,
-                shading:isHeader?{fill:'1A1A2E',type:ShadingType.CLEAR,color:'auto'}:undefined,
-                borders:CELL_BORDERS
+                                borders:CELL_BORDERS
               }));
             });
             rows.push(new TableRow({children:cells}));
@@ -1134,6 +1467,8 @@ function renderModule(sections){
               const tag=node.tagName.toLowerCase();
               if(tag==='table'){
                 out.push(convertTable(node));
+              }else if(tag==='img'){
+                out.push(new Paragraph({children:[imgRun(node)]}));
               }else if(tag==='ul'||tag==='ol'){
                 Array.from(node.children).forEach((li,idx)=>{
                   if(li.tagName.toLowerCase()!=='li')return;
@@ -1191,7 +1526,7 @@ function renderModule(sections){
           spacing:{after:240},
           children:[new TextRun({text:`Módulo de Autoinstrucción${idiomaTit}`,italics:true,size:22,color:'555555'})]
         }));
-        const metaLine=`📚 ${f.asignatura||''}   ·   🎓 ${f.grado||''}° ${f.nivel||''}   ·   📅 ${f.trimestre||''} ${f.anio||''}   ·   👩‍🏫 ${f.docente||''}   ·   ${usoLbl}`;
+        const metaLine=`📚 ${f.asignatura||''}   ·   🎓 ${gradoLbl(f.grado)} ${f.nivel||''}   ·   📅 ${f.trimestre||''} ${f.anio||''}   ·   👩‍🏫 ${f.docente||''}   ·   ${usoLbl}`;
         children.push(new Paragraph({
           alignment:AlignmentType.CENTER,
           spacing:{after:400},
@@ -1278,8 +1613,9 @@ body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;col
 .sa-label{font-size:12px;font-weight:700;}
 .sa-desc{font-size:11px;color:#666;margin-top:3px;}
 table{width:100%;border-collapse:collapse;font-size:12px;margin:12px 0;}
-th{background:#1a1a2e;color:#fff;padding:8px;text-align:left;}
-td{padding:8px;border:1px solid #e5e5e5;}
+th{background:#fff;color:#000;padding:8px;text-align:left;border:1px solid #000;font-weight:700;}
+td{padding:8px;border:1px solid #000;}
+.gema-img{width:84px;height:84px;display:inline-block;vertical-align:middle;margin:2px;}.gema-draw{display:inline-block;border:2px dashed #000;border-radius:6px;padding:14px 8px;min-width:84px;text-align:center;font-size:11px;line-height:1.3;vertical-align:middle;}.trace{font-family:'Century Gothic','Quicksand',Arial,sans-serif;color:#a6a6a6;font-size:30px;letter-spacing:3px;}.mod-content table{width:100%;border-collapse:collapse;margin:10px 0;}.mod-content th,.mod-content td{border:1px solid #000;background:#fff;color:#000;padding:6px 8px;vertical-align:middle;}.mod-content th{font-weight:700;}
 @media print{.mod-section{break-inside:avoid;}}
 </style></head><body>${htmlContent}<footer style="text-align:center;margin-top:40px;font-size:11px;color:#999;border-top:1px solid #eee;padding-top:16px;">GeMA · PanaMentorLabs · ${f.escuela} · MEDUCA Panamá · ${f.anio}</footer></body></html>`;
       downloadBlob(new Blob([fullHtml],{type:'text/html'}),`modulo-${slugify(f.tema)}.html`);
@@ -1300,6 +1636,7 @@ function slugify(str){
 }
 
 function goTo(step){
+  if(step===3)autoNivel();
   if(step===4)buildSummary();
   const map={1:'screen1',2:'screen2',3:'screen3',4:'screen4',5:'screen5'};
   showOnly(map[step]);
