@@ -936,7 +936,10 @@ REGLAS DE ESTE MÓDULO (asignatura en español, formato de las guías MEDUCA)
 - El contenido es el de la ASIGNATURA: conceptos, procesos y datos correctos para el grado. Usa los INSUMOS DEL PLAN (lecturas, lugares, especies, ejemplos, actividades, prueba escrita) siempre que existan.
 - Contextualiza en Panamá y en la comunidad del estudiante (región y escuela indicadas). Solo lugares, fechas, especies y datos REALES. NO inventes cifras ni porcentajes: si no estás seguro de un dato, no lo pongas. Cuando uses un dato concreto, indica su fuente institucional (p. ej. "Fuente: MiAmbiente").
 - Coherencia: los términos, ejemplos y datos de las actividades y de la evaluación salen del texto de la Sección 3. No se contradicen entre secciones. El producto final se nombra igual en las Secciones 5, 6 y 7.
-- Cada actividad indica entre paréntesis el logro de la Sección 1 que trabaja (p. ej. "(Logro: Describo qué es un ecosistema)"); nunca copies el texto del currículo.
+- Cada actividad indica entre paréntesis el logro de la Sección 1 que trabaja, copiado con las MISMAS palabras (p. ej. "(Logro: Describo qué es un ecosistema.)"); nunca copies el texto del currículo.
+- No repitas la misma actividad (p. ej. observar el patio) en dos secciones: cada sección propone algo distinto.
+- No uses títulos de lecturas, fichas o láminas del plan que el módulo no incluye; para referirte al texto di "la información de la Sección 3".
+- Ubica cada lugar en su provincia o comarca real; si dudas a cuál pertenece, no lo menciones.
 - Cada actividad trae UN ejemplo resuelto o un modelo. Nunca imprimas la respuesta junto a la pregunta: las respuestas van en la Sección 7 (Clave de respuestas).
 - Se trabaja EN CASA con la familia: nada obligatorio depende de compañeros de clase, internet, celular ni impresora; materiales caseros y de bajo costo. Lo que use internet va marcado como opcional.
 - No cites anexos, fichas, videos ni láminas que el módulo no incluya.
@@ -973,7 +976,7 @@ ${pequeno(k) ? IMG : ''}`.trim();
 NO incluyas actividades ni preguntas (van en las Secciones 2, 4 y 5). Formato: HTML semántico; <table> para organizador y vocabulario.`,
 
     s1: (k, f) => `Genera SOLO el contenido de la Sección 1 "Presentación del módulo" (sin el título de la sección). Incluye, en este orden:
-1. <h4>🎯 ¿Qué aprenderás?</h4>: una oración "Al finalizar este módulo podrás…" y una lista <ul> de ${pequeno(k) ? '3' : '3 a 5'} LOGROS en primera persona y en presente, derivados de los indicadores de logro para el trabajo en casa (p. ej. "Describo qué es un ecosistema.", "Propongo acciones para…"). No copies los indicadores.
+1. <h4>🎯 ¿Qué aprenderás?</h4>: una oración "Al finalizar este módulo podrás…" y una lista <ul> de ${pequeno(k) ? '3' : '3 a 5'} LOGROS derivados de los indicadores de logro para el trabajo en casa. Cada logro empieza con un verbo en PRIMERA PERSONA del presente (p. ej. "Describo qué es un ecosistema.", "Propongo acciones para conservar…"). PROHIBIDO infinitivos ("Reconocer…") y la palabra "tus". No copies los indicadores.
 2. <h4>🛠️ Habilidades que trabajarás</h4>: 2 o 3 habilidades propias de la asignatura (p. ej. observar, comparar, inferir, resolver, argumentar).
 3. <h4>🧭 Situación de aprendizaje</h4>: un título cercano al estudiante (puede ser una pregunta, p. ej. "¿Quiénes viven en el bosque de mi comunidad?") y una tabla de 2 columnas Tipo de contenido | ¿Qué trabajaremos? con 3 filas: Conceptual, Procedimental y Actitudinal, tomadas del plan.
 4. <h4>👨‍👩‍👧 Trabajo con la familia</h4>: un párrafo corto: qué aprenderá el estudiante y cómo acompañarlo (${nivel(k).minutos}; leer juntos, preguntar, revisar con la clave de la Sección 7 sin dar las respuestas antes).
@@ -983,13 +986,14 @@ Formato: HTML simple. Máx. 320 palabras.`,
 
     s2: (k, f) => `Genera SOLO el contenido de la Sección 2 "A. Exploro" (evaluación diagnóstica; sin el título de la sección). Incluye:
 1. Un párrafo de bienvenida de 2 o 3 oraciones con una situación cotidiana de la comunidad del estudiante relacionada con el tema, y 2 o 3 preguntas para pensar.
-2. <h3>Actividad 1</h3>: una actividad corta para descubrir lo que ya sabe (${pequeno(k) ? 'observar algo en casa o en el patio y conversar; encerrar o colorear [[IMG:…|…]]' : 'observar algo en casa o en el patio, clasificar, marcar o responder'}). Con ejemplo resuelto.
+2. <h3>Actividad 1</h3>: una actividad corta para descubrir lo que ya sabe (${pequeno(k) ? 'observar algo en casa o en el patio y conversar; encerrar o colorear [[IMG:…|…]]' : 'observar algo en casa o en el patio, clasificar, marcar o responder'}). Con ejemplo resuelto. Si clasificas lo observado, usa categorías correctas para el grado (p. ej. "ser vivo / no vivo"${pequeno(k) ? '' : ' o "biótico / abiótico"'}).
 ${pequeno(k) ? '3. Una pregunta final para dibujar: "Dibuja lo que sabes de…".' : '3. <h3>Lo que sé y lo que quiero saber</h3>: una tabla de 3 columnas — Lo que sé | Lo que quiero saber | Lo que aprendí — con 3 filas vacías. Indica que la columna "Lo que aprendí" se completa al terminar el módulo.'}
 Aclara que en esta sección no hay respuestas incorrectas. Formato: HTML con <h3> por actividad. Máx. 280 palabras.`,
 
     s4: (k, f) => `Genera SOLO el contenido de la Sección 4 "C. Comprendo la información" (evaluación formativa; sin el título de la sección).
 Incluye ${pequeno(k) ? '3' : '3 o 4'} actividades numeradas (<h3>Actividad 1: …</h3>), una por cada CONTENIDO PROCEDIMENTAL del plan cuando sea posible, usando SOLO el texto, el organizador y el vocabulario de la Sección 3. Tipos adecuados: ${nivel(k).actividades}.
 ${perfilAsig(f.asignatura).nom === 'Ciencias' ? 'Una de ellas es la ACTIVIDAD PRÁCTICA (🧪 experimento casero seguro u observación del entorno) con: ¿Qué necesitas?, Procedimiento (pasos numerados), Tabla de registro y 2 o 3 Preguntas de conclusión.' : 'Una de ellas es un TRABAJO PRÁCTICO del plan (p. ej. mapa, tabla, organizador, ejercicios resueltos, entrevista a un familiar) con pasos numerados.'}
+La actividad práctica debe ser DISTINTA de la actividad de la Sección 2.
 Termina con <h3>✅ Me autocompruebo</h3>: 3 a 5 preguntas cortas de respuesta única para verificar lo aprendido (las respuestas van en la Sección 7).
 Para cada actividad: título, entre paréntesis el logro de la Sección 1 que trabaja, instrucción clara, los ítems con su contenido exacto y el ejemplo resuelto del primero. Deja líneas ________ o celdas vacías para responder.
 NO pongas las respuestas. Formato: HTML con <h3> por actividad, <ol> para ítems y <table> para cuadros. Máx. 750 palabras.`,
@@ -1004,7 +1008,7 @@ NO pongas las respuestas. Formato: HTML con <h3> por actividad, <ol> para ítems
       return `Genera SOLO el contenido de la Sección 5 (sin el título de la sección). Incluye, en este orden:
 1. <h3>D. Aplico mis conocimientos</h3>: un caso o situación NUEVA de la comunidad o de Panamá (no repitas el texto de la Sección 3) con 2 o 3 preguntas de análisis.
 2. <h3>🏆 Mi producto</h3>: el ENTREGABLE del plan (p. ej. organizador gráfico, afiche, mapa) adaptado para hacerlo en casa con materiales sencillos: qué debe contener (lista) y pasos (máx. 5). Nómbralo con un título claro.
-3. <h3>📝 Evaluación sumativa</h3>: ${n.evaluacion.split(/,? y RÚBRICA/)[0]}. Si el plan trae una prueba escrita, úsala como base (solo los ítems que corresponden al tema). Cada ítem muestra su puntaje entre paréntesis y al final indica el TOTAL de puntos. En selección múltiple, 4 opciones A) B) C) D) con una sola correcta.
+3. <h3>📝 Evaluación sumativa</h3>: ${n.evaluacion.split(/,? y RÚBRICA/)[0]}. Si el plan trae una prueba escrita, úsala como base (solo los ítems que corresponden al tema). Cada ítem muestra su puntaje entre paréntesis y al final indica el TOTAL de puntos. En selección múltiple, 4 opciones A) B) C) D) con una sola correcta; las incorrectas deben ser CREÍBLES para el grado (conceptos cercanos del mismo tema o errores comunes de los estudiantes). PROHIBIDO opciones absurdas, chistosas o de otro tema (p. ej. "un parque de diversiones", "la selva polar").
 4. <h3>📊 Rúbrica del producto</h3>: RÚBRICA ANALÍTICA en tabla con columnas Criterio | ${ESCALA.split(' | ').join(' | ')}. ${pequeno(k) ? '3' : '3 a 4'} criterios tomados de los criterios e instrumentos del plan, cada uno ligado a un logro de la Sección 1. Descriptores observables. PROHIBIDO usar puntualidad, orden, limpieza o conducta como criterios de nota.
 5. <p>Nota: la calificación de la prueba se obtiene con: Nota = 1 + (puntos obtenidos × 4 ÷ puntos totales).</p>
 6. NOTA DE CORTESÍA (en <p>): devolver el módulo a tiempo y en buen estado; aclara que NO afecta la calificación.
@@ -1023,7 +1027,7 @@ Formato: HTML simple. Máx. 220 palabras.`;
     },
 
     s7: (k, f) => `Genera SOLO el contenido de la Sección 7 (sin el título de la sección). Incluye:
-1. <h3>🔑 Clave de respuestas (para el adulto)</h3>: las respuestas de los ítems con respuesta única de la Sección 4 (actividades y "Me autocompruebo") y de la evaluación sumativa de la Sección 5 (usa el contenido que se te da abajo; numeración igual). Para respuestas abiertas, da una respuesta modelo y qué debe contener. ${perfilAsig(f.asignatura).nom === 'Matemática' ? 'Incluye el procedimiento de cada ejercicio.' : ''}
+1. <h3>🔑 Clave de respuestas (para el adulto)</h3>: las respuestas de TODOS los ítems numerados de la Sección 4 (actividades y "Me autocompruebo") y de la Sección 5 (D. Aplico y la evaluación sumativa COMPLETA), en el mismo orden y con la misma numeración (usa el contenido que se te da abajo). No omitas ninguno: para los de respuesta abierta da una respuesta modelo y qué debe contener. Antes de terminar, verifica que la clave de la evaluación sumativa tenga tantos ítems como la prueba. ${perfilAsig(f.asignatura).nom === 'Matemática' ? 'Incluye el procedimiento de cada ejercicio.' : ''}
 2. <h3>📝 Glosario</h3>: tabla Término | Significado con los términos del vocabulario de la Sección 3 (mismas definiciones).
 3. <h3>👨‍👩‍👧 Nota para la familia</h3>: 4 a 5 viñetas prácticas (sesiones cortas, leer juntos, dejar que intente antes de ayudar, revisar con la clave después, qué entregar al docente: nombra el producto EXACTAMENTE como en la Sección 5).
 4. <h3>📚 Fuentes</h3>: 2 a 4 referencias REALES y generales que el docente pueda verificar (p. ej. las guías del estudiante de MEDUCA del grado, el programa de la asignatura, instituciones como MiAmbiente o el Instituto Smithsonian de Investigaciones Tropicales). NO inventes autores, años ni enlaces.
@@ -1041,7 +1045,6 @@ Formato: HTML con <h3> por actividad y <ol> para pasos.`,
   function datosGenerales(f, k) {
     const filas = [['Área', f.area || '—'], ['Asignatura', f.asignatura], ['Grado', `${gradoLbl(f.grado)} · ${f.nivel}`], ['Trimestre', `${f.trimestre} · ${f.anio}`],
       ['Tiempo estimado', nivel(k).minutos], ['Semana', 'del ______ al ______ de ______________']];
-    if (f.objetivo) filas.splice(2, 0, ['Objetivo de aprendizaje', f.objetivo]);
     return `<h4>🏫 Datos generales</h4><table>${filas.map(r => `<tr><th>${r[0]}</th><td>${r[1]}</td></tr>`).join('')}</table>`;
   }
   function cronograma(k) {
