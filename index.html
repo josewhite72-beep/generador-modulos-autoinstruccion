@@ -168,6 +168,8 @@ textarea{resize:vertical;min-height:80px;}
 .mod-content li{margin-bottom:6px;}
 .mod-content p{margin-bottom:10px;}
 .mod-content strong{font-weight:700;}
+.mod-content .sabias{border:1px solid #000;border-radius:8px;padding:10px 12px;margin:12px 0;background:#fff;}
+.mod-animo{margin-top:14px;padding:12px;background:#f0fdf4;border-radius:8px;font-size:13px;}
 
 .rubric-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px;}
 .rubric-table th{background:var(--ink);color:#fff;padding:8px 10px;text-align:left;font-weight:600;}
@@ -239,6 +241,8 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
 }
 .gema-img{width:84px;height:84px;display:inline-block;vertical-align:middle;margin:2px;}
 .gema-draw{display:inline-block;border:2px dashed #000;border-radius:6px;padding:14px 8px;min-width:84px;text-align:center;font-size:11px;line-height:1.3;vertical-align:middle;}
+.gema-emoji{display:inline-block;font-size:48px;line-height:1.05;text-align:center;border:1px dashed #999;border-radius:6px;padding:4px 8px;min-width:84px;vertical-align:middle;}
+.gema-emoji small{font-size:11px;}
 .trace{font-family:'Century Gothic','Quicksand',Arial,sans-serif;color:#a6a6a6;font-size:30px;letter-spacing:3px;}
 .mod-content table{width:100%;border-collapse:collapse;margin:10px 0;}
 .mod-content th,.mod-content td{border:1px solid #000;background:#fff;color:#000;padding:6px 8px;vertical-align:middle;}
@@ -304,6 +308,17 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
   <div class="alert alert-info"><span class="alert-icon">✨</span><div>GeMA extrajo los datos del plan. Revisa y corrige lo que necesites.</div></div>
   <div id="fileChipArea"></div>
   <div class="section-card">
+    <div class="section-card-title">📘 Tipo de módulo</div>
+    <div class="config-grid" id="tipoGrid">
+      <div class="option-card" onclick="GEMA_ES.selectTipo(this,'ingles')" data-val="ingles">
+        <span class="option-icon">🇺🇸</span><div><div class="option-label">Inglés (lengua extranjera)</div><div class="option-sub">Estructura AOA por destrezas: Listening, Reading, Writing, Speaking, Mediation</div></div><div class="check-mark">✓</div>
+      </div>
+      <div class="option-card" onclick="GEMA_ES.selectTipo(this,'espanol')" data-val="espanol">
+        <span class="option-icon">📗</span><div><div class="option-label">Asignatura en español</div><div class="option-sub">Ciencias, Sociales, Matemática, Español… con el formato de las guías del estudiante de MEDUCA</div></div><div class="check-mark">✓</div>
+      </div>
+    </div>
+  </div>
+  <div class="section-card">
     <div class="section-card-title">🏫 Datos institucionales</div>
     <div class="field-grid">
       <div class="field-group"><label>Escuela</label><input type="text" id="f_escuela" value="C.E.B.G. Barrigón"/></div>
@@ -330,12 +345,28 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
   <div class="section-card">
     <div class="section-card-title">🎯 Indicadores de logro</div>
     <div class="alert alert-warn"><span class="alert-icon">⚠️</span><div>Solo indicadores académicos. No se incluyen criterios conductuales como criterios de evaluación.</div></div>
+    <div id="esOmitidos"></div>
     <div class="indicadores-list" id="indicadoresList"></div>
     <button class="btn-add-ind" onclick="addIndicador()">+ Agregar indicador</button>
+  </div>
+  <div class="section-card" id="esExtraCard" style="display:none">
+    <div class="section-card-title">📗 Datos de la secuencia didáctica</div>
+    <div class="field-grid">
+      <div class="field-group span2"><label>Área</label><input type="text" id="f_area" placeholder="Ej.: Ciencias de la vida"/></div>
+      <div class="field-group span2"><label>Objetivo de aprendizaje</label><textarea id="f_objetivo" rows="2"></textarea></div>
+      <div class="field-group span2"><label>Evaluación del plan (evidencias, criterios, instrumentos, prueba escrita)</label><textarea id="f_evaluacion" rows="3"></textarea></div>
+      <div class="field-group span2"><label>Insumos de los planes diarios (lecturas, datos, actividades prácticas, diferenciación)</label><textarea id="f_insumos" rows="6" placeholder="GeMA los extrae del planeamiento; puedes completarlos o corregirlos."></textarea></div>
+    </div>
   </div>
   <div class="section-card">
     <div class="section-card-title">🎮 Actividades sugeridas</div>
     <textarea id="f_actividades" rows="4" placeholder="Actividades mencionadas en el plan…"></textarea>
+  </div>
+  <div class="section-card">
+    <div class="section-card-title">🔁 Lección anterior (opcional)</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">Pega el tema, el cuento o el vocabulario de la lección anterior para que este módulo use otro cuento y otro contexto.</p>
+    <textarea id="f_previa" rows="3" placeholder="Ej.: 5-1 One, Two, Three Bananas — cuento de Ana en el mercado; banana, apple, orange…"></textarea>
+    <button class="btn-add-ind" type="button" onclick="usarUltimoModulo()">↩️ Usar el último módulo generado</button>
   </div>
   <div class="nav-row">
     <button class="btn btn-secondary" onclick="goTo(1)">← Volver</button>
@@ -361,7 +392,7 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
       </div>
     </div>
   </div>
-  <div class="section-card">
+  <div class="section-card" id="idiomaCard">
     <div class="section-card-title">🌐 Idioma del módulo</div>
     <div class="config-grid" id="idiomaGrid">
       <div class="option-card selected" onclick="selectIdioma(this,'es')" data-val="es">
@@ -447,7 +478,7 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
   </div>
   <div class="section-card" style="background:linear-gradient(135deg,rgba(79,70,229,.06),rgba(6,182,212,.06));border:1.5px solid rgba(79,70,229,.2);">
     <div class="section-card-title" style="color:var(--ink);">⚙️ Estructura que se generará</div>
-    <div style="font-size:13px;color:var(--muted);line-height:2.2;">
+    <div id="estructuraLista" style="font-size:13px;color:var(--muted);line-height:2.2;">
       ✅ Sección 0 — Portada institucional<br>
       ✅ Sección 1 — Presentación + guía de íconos<br>
       ✅ Sección 2 — ¡Empecemos! (saberes previos)<br>
@@ -602,7 +633,28 @@ REGLAS DE COHERENCIA
 - No cite anexos, fichas ni audios que el módulo no incluya.
 - Solo sonidos y datos reales; gramática inglesa correcta ("What does the dog say?").
 - Cada actividad incluye UN ejemplo resuelto.
+- Números, colores y adjetivos también son vocabulario: si el texto usa "four" o "big", esa palabra debe estar en la tabla de vocabulario.
+- Si el Tema es una frase en inglés (p. ej. "That's a blue bus"), esa es la frase modelo del módulo: úsala TAL CUAL como patrón principal; no la cambies por otra estructura ("This is…").
+- El producto final se nombra igual en las Secciones 5, 6 y 7.
+- En la rúbrica, "Excelente" = todos los ítems correctos (p. ej. 6 de 6).
+- Para indicar qué practica una actividad, cita la frase "Yo puedo…" (o "I can…") de la Sección 1 que corresponda; nunca copies el texto del currículo.
+- El módulo se trabaja EN CASA con la familia: nada obligatorio depende de compañeros de clase, celular, internet ni grabaciones. Lo que use celular va marcado como opcional.
 - Termine siempre cada párrafo, lista y tabla. Si le falta espacio, recorte contenido; nunca deje una frase a medias.`;
+
+  const PRON = `
+PRONUNCIACIÓN (todos los grados)
+- Entre barras y con ortografía española, para que un padre hispanohablante la pueda leer: banana /ba-NÁ-na/, six /siks/, school /skul/, store /stor/, dog /dog/, pig /pig/, think /zink/ (lengua entre los dientes).
+- PROHIBIDO usar símbolos fonéticos (/ɪ/, /θ/, /ə/) o deletreo para angloparlantes (buh-NA-nuh).
+- No agregues "e" antes de s + consonante (school /skul/, NO /es-cúl/) y conserva la consonante final (dog /dog/, NO /doc/).`;
+
+  function reglaIdioma(idioma) {
+    if (idioma !== 'bi' && idioma !== 'en') return '';
+    return `
+IDIOMA DE CADA PARTE (obligatorio)
+- En ESPAÑOL todo lo que lee el ADULTO: instrucciones "Adulto: …", títulos de las actividades, Nota para la familia, rúbrica o lista de cotejo, nota de cortesía, clave de respuestas y avisos. La familia puede no hablar inglés.
+- En INGLÉS solo lo que el estudiante aprende y usa: vocabulario, frases modelo, textos, canciones e ítems de los ejercicios${idioma === 'en' ? ', además de las consignas cortas dirigidas al estudiante (p. ej. "Circle the correct picture.")' : ''}.
+- PROHIBIDO escribir instrucciones para el adulto en inglés ("Adult: Read…", "Note for the Family").`;
+  }
 
   const IMG = `
 ILUSTRACIONES
@@ -610,8 +662,8 @@ ILUSTRACIONES
 - En actividades de "encierra" o "une", ponga cada opción en su propia celda de una tabla: <td>[[IMG:cat]]</td><td>[[IMG:cow]]</td>…
 - No use emojis como opciones de respuesta (no se imprimen bien). Puede usar emojis solo como íconos decorativos de títulos.`;
 
-  function bloquePrompt(k) {
-    if (k === 'secundaria') return COMUNES.trim();
+  function bloquePrompt(k, idioma) {
+    if (k === 'secundaria') return (COMUNES + PRON + reglaIdioma(idioma)).trim();
     const p = PERFILES[k];
     const acts = Object.entries(p.permitidas).map(([s, v]) => `  - ${s}: ${v}`).join('\n');
     return `
@@ -623,11 +675,13 @@ NIVEL DEL ESTUDIANTE: ${p.etiqueta}
 - Estructuras: ${p.estructuras}
 - Lectura: ${p.lectura}
 - Pronunciación: ${p.pronunciacion}
+${reglaIdioma(idioma)}
 ACTIVIDADES PERMITIDAS POR DESTREZA
 ${acts}
 PROHIBIDO EN ESTE NIVEL: ${p.prohibidas}
 Si un indicador del currículo pide algo prohibido para este nivel (p. ej. "escribe 3–5 oraciones" en Kinder), ADAPTE la evidencia al nivel; no la copie literalmente.
 ${COMUNES}
+${PRON}
 ${esPequeno(k) ? IMG : ''}`.trim();
   }
 
@@ -636,9 +690,11 @@ ${esPequeno(k) ? IMG : ''}`.trim();
     const p = PERFILES[k] || PERFILES.segundoCiclo;
     return `Genera SOLO el contenido de la Sección 1 "Presentación del módulo" (sin el título de la sección).
 Incluye, en este orden:
-1. <h4>🎯 Lo que voy a lograr</h4>: ${p.indicadores} Reescribe los indicadores de logro; no los copies.
+1. <h4>🎯 Lo que voy a lograr</h4>: ${p.indicadores} ${esPequeno(k) ? '' : 'Escríbelas como "I can…" seguidas de su traducción "(Yo puedo…)". '}Reescribe los indicadores de logro para el trabajo en casa con la familia (sin compañeros de clase ni tareas digitales); no los copies.
 2. <h4>👨‍👩‍👧 Para la familia</h4>: 2 párrafos cortos: qué aprenderá el estudiante y cómo acompañarlo (${p.minutos}).${esPequeno(k) ? ' Aclara que el adulto NO necesita saber inglés porque cada frase trae su pronunciación entre barras.' : ''}
-${p.porDias ? '3. <h4>📅 Plan de la semana</h4>: tabla Día | Sección | ¿Qué hacemos? (Día 1: Sección 2 · Día 2: Sección 3 · Días 3 y 4: Sección 4 · Día 5: Secciones 5 y 6).\n4. <h4>💬 Frases del módulo</h4>: las frases clave de la Sección 3, cada una con su pronunciación y su significado.' : ''}
+${p.porDias ? '3. <h4>💬 Frases del módulo</h4>: las frases clave de la Sección 3, cada una con su pronunciación y su significado.' : ''}
+NO incluyas plan de la semana (la app lo agrega).
+Si algún indicador de logro NO tiene relación con el Tema (p. ej. "link historical events" en un tema de playa), no lo uses y agrega al final exactamente: <p class="gema-aviso">Indicadores omitidos por no corresponder al tema: [lista]</p>
 Formato: HTML simple. Máx. 250 palabras.`;
   }
 
@@ -683,7 +739,7 @@ Formato: <h3> por parte, <table> para vocabulario, <blockquote> para el texto. M
     return `Genera SOLO la Sección 4 "¡Practiquemos! / Actividades". Organízala en DÍA 3 (Listening, Speaking, Mediation) y DÍA 4 (Reading, Writing).
 Incluye EXACTAMENTE 5 actividades, una por destreza, usando SOLO estos tipos:
 ${lineas}
-Para cada actividad: título con ícono, indicador que practica entre paréntesis, instrucción "Adulto: …", los ítems (3 a 6) con el contenido exacto, y el ejemplo resuelto del ítem 1.
+Para cada actividad: título con ícono, entre paréntesis la frase "Yo puedo…" de la Sección 1 que practica, instrucción "Adulto: …", los ítems (3 a 6) con el contenido exacto, y el ejemplo resuelto del ítem 1.
 - Listening: escribe primero "Usted dice:" con las frases exactas en inglés + pronunciación; luego la tabla de dibujos [[IMG:…]] para que el niño marque.
 - Reading ${k === 'preescolar' ? '(pre-lectura)' : ''}: usa solo el vocabulario${k === 'primerCiclo' ? ' y las oraciones del cuento' : ''} de la Sección 3.
 - Writing: ${k === 'preescolar' ? 'escribe la palabra que se debe repasar entre <span class="trace">…</span> junto a su [[IMG:…]].' : 'para repasar, escribe la palabra entre <span class="trace">…</span>; deja la línea ________ para escribir.'}
@@ -720,30 +776,54 @@ Formato: HTML simple. Máx. 150 palabras.`;
   function specS7(k) {
     return `Genera SOLO la Sección 7 "Recursos y Glosario". Incluye:
 1. GLOSARIO: tabla con las palabras y frases del vocabulario de la Sección 3. Columnas: Inglés | Se pronuncia | Español${esPequeno(k) ? '' : ' | Ejemplo'}.
-2. NOTA PARA LA FAMILIA: 4 a 6 viñetas prácticas (sesiones cortas, repetir y jugar, corregir repitiendo el modelo sin decir "no", celebrar, escuchar la pronunciación en un traductor si hay celular, qué entregar).
-3. RESPUESTAS (PARA EL ADULTO): la clave de cada actividad con respuesta única de las Secciones 3 y 4 (usa el contenido que se te da abajo).
+2. NOTA PARA LA FAMILIA: 4 a 6 viñetas prácticas (sesiones cortas, repetir y jugar, corregir repitiendo el modelo sin decir "no", celebrar, escuchar la pronunciación en un traductor si hay celular, qué entregar: nombra el producto final EXACTAMENTE como en la Sección 5).
+3. RESPUESTAS (PARA EL ADULTO): la clave SOLO de los ítems con una respuesta correcta única: actividades de la Sección 4 y preguntas del cuento o texto de la Sección 3 (usa el contenido que se te da abajo). No incluyas canciones, gestos, vocabulario ni actividades de respuesta libre.
 4. RECURSOS OPCIONALES: 2 sugerencias, primero sin conexión (juego, canción) y marcadas como opcionales.
 Formato: HTML simple.`;
   }
 
   function specS8Extra(k) {
-    if (!esPequeno(k)) return '';
-    return `\nNIVEL: ${PERFILES[k].extension} Máximo 2 a 3 pasos por actividad, dirigidos al adulto, con pronunciación en las frases en inglés.`;
+    const cita = '\nPara el indicador de cada actividad, cita entre paréntesis la frase "Yo puedo…"/"I can…" de la Sección 1; no copies el texto del currículo. Nada obligatorio requiere celular, internet, grabar ni compañeros de clase.';
+    if (!esPequeno(k)) return cita;
+    return `${cita}\nNIVEL: ${PERFILES[k].extension} Máximo 2 a 3 pasos por actividad, dirigidos al adulto, con pronunciación en las frases en inglés.`;
   }
 
-  return { PERFILES, ESCALA_NUM, clave, tarjetaNivel, esPequeno, bloquePrompt, specS1, specS2, specS3, specS4, specS5, specS6, specS7, specS8Extra,
+  /* ---------- Partes fijas que pone la app (no la IA) ---------- */
+  function planSemana(k) {
+    if (!PERFILES[k] || !PERFILES[k].porDias) return '';
+    const d2 = k === 'primerCiclo' ? 'Palabras nuevas, la oración modelo, la canción y el cuento.' : 'Palabras nuevas, frases clave y la canción.';
+    const d4 = k === 'primerCiclo' ? 'Leer oraciones y escribir palabras.' : 'Unir dibujos con palabras y repasar letras.';
+    const filas = [['Día 1', 'Sección 2', '¿Qué sé? Conversamos y señalamos dibujos.'], ['Día 2', 'Sección 3', d2],
+      ['Día 3', 'Sección 4', 'Escuchar, hablar y enseñar a la familia.'], ['Día 4', 'Sección 4', d4],
+      ['Día 5', 'Secciones 5 y 6', 'Producto final y ¿Cómo me fue?']];
+    return `<h4>📅 Plan de la semana</h4><table><tr><th>Día</th><th>Sección</th><th>¿Qué hacemos?</th></tr>${filas.map(f => `<tr><td>${f[0]}</td><td>${f[1]}</td><td>${f[2]}</td></tr>`).join('')}</table>`;
+  }
+  function iconos(k) {
+    const lista = k === 'preescolar'
+      ? [['🎧', 'Escucha', 'y señala'], ['🗣️', 'Habla', 'o repite en voz alta'], ['🖍️', 'Colorea', 'y repasa letras'], ['✂️', 'Recorta', 'o pega'], ['🤸', 'Muévete', 'y haz los gestos'], ['👨‍👩‍👧', 'Juega', 'con tu familia']]
+      : k === 'primerCiclo'
+      ? [['🎧', 'Escucha', 'con atención'], ['🗣️', 'Habla', 'o repite en voz alta'], ['📖', 'Lee', 'con ayuda de un adulto'], ['✍️', 'Escribe', 'o copia'], ['🖍️', 'Colorea', 'o dibuja'], ['✂️', 'Recorta', 'o pega']]
+      : [['🎧', 'Escucha', 'con atención'], ['✍️', 'Escribe', 'o colorea'], ['🗣️', 'Habla', 'o repite en voz alta'], ['📖', 'Lee', 'con cuidado'], ['🤔', 'Piensa', 'antes de responder'], ['✂️', 'Recorta', 'o pega']];
+    return lista.map(([i, a, b]) => `<div class="icon-item"><span class="ico">${i}</span> <strong>${a}</strong> ${b}</div>`).join('');
+  }
+
+  return { PERFILES, ESCALA_NUM, clave, tarjetaNivel, esPequeno, bloquePrompt, planSemana, iconos, specS1, specS2, specS3, specS4, specS5, specS6, specS7, specS8Extra,
     PEDIR_CONTINUACION: 'Tu respuesta anterior se cortó por límite de longitud. Continúa EXACTAMENTE desde el último carácter, sin repetir nada, sin saludos ni explicaciones, y cierra todas las etiquetas HTML abiertas.' };
 })();
 
 
 /* ==== GeMA · ilustraciones para colorear (PanaMentorLabs) ==== */
-const GEMA_IMG={"cat":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M140 168 C178 162 182 118 160 104\" fill=\"none\" stroke-width=\"9\"/><ellipse cx=\"100\" cy=\"145\" rx=\"45\" ry=\"40\" fill=\"#fff\"/><polygon points=\"64,62 60,18 92,44\" fill=\"#fff\"/><polygon points=\"136,62 140,18 108,44\" fill=\"#fff\"/><circle cx=\"100\" cy=\"82\" r=\"42\" fill=\"#fff\"/><ellipse cx=\"84\" cy=\"76\" rx=\"4.5\" ry=\"7\" fill=\"#000\"/><ellipse cx=\"116\" cy=\"76\" rx=\"4.5\" ry=\"7\" fill=\"#000\"/><polygon points=\"94,92 106,92 100,99\" fill=\"#000\" stroke-width=\"3\"/><path d=\"M100 99 Q93 109 86 103 M100 99 Q107 109 114 103\" fill=\"none\" stroke-width=\"3.5\"/><path d=\"M56 90 L80 94 M56 102 L80 100 M144 90 L120 94 M144 102 L120 100\" stroke-width=\"3\"/><ellipse cx=\"84\" cy=\"184\" rx=\"13\" ry=\"8\" fill=\"#fff\"/><ellipse cx=\"116\" cy=\"184\" rx=\"13\" ry=\"8\" fill=\"#fff\"/></g></svg>","dog":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M140 150 Q170 138 166 108\" fill=\"none\" stroke-width=\"9\"/><ellipse cx=\"100\" cy=\"150\" rx=\"42\" ry=\"37\" fill=\"#fff\"/><circle cx=\"100\" cy=\"84\" r=\"40\" fill=\"#fff\"/><ellipse cx=\"62\" cy=\"90\" rx=\"14\" ry=\"30\" transform=\"rotate(18 62 90)\" fill=\"#fff\"/><ellipse cx=\"138\" cy=\"90\" rx=\"14\" ry=\"30\" transform=\"rotate(-18 138 90)\" fill=\"#fff\"/><circle cx=\"87\" cy=\"78\" r=\"5\" fill=\"#000\"/><circle cx=\"113\" cy=\"78\" r=\"5\" fill=\"#000\"/><ellipse cx=\"100\" cy=\"104\" rx=\"19\" ry=\"14\" fill=\"#fff\"/><ellipse cx=\"100\" cy=\"97\" rx=\"8\" ry=\"6\" fill=\"#000\"/><path d=\"M100 103 L100 110 M100 110 Q92 116 87 111 M100 110 Q108 116 113 111\" fill=\"none\" stroke-width=\"3.5\"/><ellipse cx=\"84\" cy=\"184\" rx=\"13\" ry=\"8\" fill=\"#fff\"/><ellipse cx=\"116\" cy=\"184\" rx=\"13\" ry=\"8\" fill=\"#fff\"/></g></svg>","cow":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M72 50 C58 40 58 22 72 16 C70 30 80 40 90 44 Z\" fill=\"#fff\"/><path d=\"M128 50 C142 40 142 22 128 16 C130 30 120 40 110 44 Z\" fill=\"#fff\"/><ellipse cx=\"44\" cy=\"72\" rx=\"24\" ry=\"11\" transform=\"rotate(-15 44 72)\" fill=\"#fff\"/><ellipse cx=\"156\" cy=\"72\" rx=\"24\" ry=\"11\" transform=\"rotate(15 156 72)\" fill=\"#fff\"/><ellipse cx=\"100\" cy=\"95\" rx=\"48\" ry=\"58\" fill=\"#fff\"/><path d=\"M62 70 C60 50 80 42 96 50 C104 62 90 76 76 80 C68 82 63 78 62 70 Z\" fill=\"#000\" stroke-width=\"2\"/><circle cx=\"80\" cy=\"96\" r=\"6\" fill=\"#000\"/><circle cx=\"120\" cy=\"96\" r=\"6\" fill=\"#000\"/><ellipse cx=\"100\" cy=\"142\" rx=\"42\" ry=\"27\" fill=\"#fff\"/><ellipse cx=\"85\" cy=\"142\" rx=\"6\" ry=\"9\" fill=\"#000\"/><ellipse cx=\"115\" cy=\"142\" rx=\"6\" ry=\"9\" fill=\"#000\"/><path d=\"M88 160 Q100 166 112 160\" fill=\"none\" stroke-width=\"3.5\"/></g></svg>","duck":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><polygon points=\"148,122 180,106 166,146\" fill=\"#fff\"/><ellipse cx=\"105\" cy=\"142\" rx=\"62\" ry=\"34\" fill=\"#fff\"/><circle cx=\"62\" cy=\"84\" r=\"28\" fill=\"#fff\"/><path d=\"M38 86 Q10 86 14 98 Q28 106 42 98 Z\" fill=\"#fff\"/><circle cx=\"60\" cy=\"77\" r=\"4.5\" fill=\"#000\"/><path d=\"M92 132 Q122 112 150 134 Q122 158 92 132 Z\" fill=\"#fff\"/><path d=\"M10 184 q15 -9 30 0 t30 0 t30 0 t30 0 t30 0 t30 0\" fill=\"none\" stroke-width=\"4\"/></g></svg>","hen":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><polygon points=\"148,108 170,70 182,98 160,128\" fill=\"#fff\"/><ellipse cx=\"105\" cy=\"125\" rx=\"55\" ry=\"44\" fill=\"#fff\"/><path d=\"M95 168 L95 186 M85 190 L95 186 L104 190 M118 168 L118 186 M108 190 L118 186 L127 190\" fill=\"none\" stroke-width=\"4\"/><path d=\"M58 56 q3 -12 10 -3 q4 -12 10 -2 q5 -9 8 4 Z\" fill=\"#fff\"/><circle cx=\"70\" cy=\"76\" r=\"25\" fill=\"#fff\"/><polygon points=\"47,70 30,77 47,84\" fill=\"#fff\"/><ellipse cx=\"50\" cy=\"94\" rx=\"5\" ry=\"8\" fill=\"#fff\" stroke-width=\"4\"/><circle cx=\"66\" cy=\"70\" r=\"4.5\" fill=\"#000\"/><path d=\"M92 118 Q120 102 142 122 Q118 148 92 118 Z\" fill=\"#fff\"/><ellipse cx=\"168\" cy=\"178\" rx=\"13\" ry=\"16\" fill=\"#fff\" stroke-width=\"4\"/></g></svg>","rooster":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M128 122 C132 48 196 36 192 98 C178 72 162 82 150 126 Z\" fill=\"#fff\"/><path d=\"M140 134 C166 96 200 106 188 148 C176 128 162 130 150 144 Z\" fill=\"#fff\"/><path d=\"M136 112 C150 70 176 62 178 80 C164 78 152 92 146 118 Z\" fill=\"#fff\"/><ellipse cx=\"108\" cy=\"132\" rx=\"46\" ry=\"38\" fill=\"#fff\"/><path d=\"M100 170 L100 188 M89 192 L100 188 L110 192 M120 168 L120 188 M110 192 L120 188 L130 192 M100 178 L93 176 M120 178 L113 176\" fill=\"none\" stroke-width=\"4\"/><path d=\"M52 56 q0 -22 13 -10 q3 -22 16 -8 q6 -20 16 -4 q6 2 0 16 Z\" fill=\"#fff\"/><circle cx=\"74\" cy=\"78\" r=\"26\" fill=\"#fff\"/><polygon points=\"50,72 30,79 50,88\" fill=\"#fff\"/><ellipse cx=\"54\" cy=\"102\" rx=\"8\" ry=\"13\" fill=\"#fff\" stroke-width=\"4\"/><circle cx=\"71\" cy=\"72\" r=\"4.5\" fill=\"#000\"/><path d=\"M92 126 Q122 108 146 128 Q120 156 92 126 Z\" fill=\"#fff\"/></g></svg>","car":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M18 132 L18 106 Q20 95 40 93 L60 92 L80 64 Q85 58 96 58 L134 58 Q146 58 152 66 L170 92 Q186 94 186 106 L186 132 Z\" fill=\"#fff\"/><path d=\"M68 92 L86 68 L110 68 L110 92 Z M118 68 L140 68 L156 92 L118 92 Z\" fill=\"#fff\" stroke-width=\"4\"/><path d=\"M114 96 L114 128 M120 108 L130 108\" fill=\"none\" stroke-width=\"4\"/><circle cx=\"178\" cy=\"108\" r=\"5\" fill=\"#fff\" stroke-width=\"3\"/><circle cx=\"56\" cy=\"134\" r=\"19\" fill=\"#fff\"/><circle cx=\"56\" cy=\"134\" r=\"6\" fill=\"#000\"/><circle cx=\"150\" cy=\"134\" r=\"19\" fill=\"#fff\"/><circle cx=\"150\" cy=\"134\" r=\"6\" fill=\"#000\"/></g></svg>","bus":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><rect x=\"12\" y=\"46\" width=\"176\" height=\"100\" rx=\"12\" fill=\"#fff\"/><rect x=\"24\" y=\"58\" width=\"30\" height=\"30\" rx=\"3\" fill=\"#fff\" stroke-width=\"4\"/><rect x=\"62\" y=\"58\" width=\"30\" height=\"30\" rx=\"3\" fill=\"#fff\" stroke-width=\"4\"/><rect x=\"100\" y=\"58\" width=\"30\" height=\"30\" rx=\"3\" fill=\"#fff\" stroke-width=\"4\"/><rect x=\"142\" y=\"58\" width=\"36\" height=\"72\" rx=\"3\" fill=\"#fff\" stroke-width=\"4\"/><path d=\"M160 60 L160 128 M12 106 L142 106\" fill=\"none\" stroke-width=\"4\"/><circle cx=\"184\" cy=\"134\" r=\"4\" fill=\"#fff\" stroke-width=\"3\"/><circle cx=\"52\" cy=\"148\" r=\"18\" fill=\"#fff\"/><circle cx=\"52\" cy=\"148\" r=\"6\" fill=\"#000\"/><circle cx=\"148\" cy=\"148\" r=\"18\" fill=\"#fff\"/><circle cx=\"148\" cy=\"148\" r=\"6\" fill=\"#000\"/></g></svg>","bike":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><circle cx=\"48\" cy=\"132\" r=\"36\" fill=\"#fff\" stroke-width=\"6\"/><circle cx=\"48\" cy=\"132\" r=\"26\" fill=\"none\" stroke-width=\"3\"/><circle cx=\"48\" cy=\"132\" r=\"4\" fill=\"#000\"/><circle cx=\"152\" cy=\"132\" r=\"36\" fill=\"#fff\" stroke-width=\"6\"/><circle cx=\"152\" cy=\"132\" r=\"26\" fill=\"none\" stroke-width=\"3\"/><circle cx=\"152\" cy=\"132\" r=\"4\" fill=\"#000\"/><path d=\"M48 132 L95 132 L138 82 L80 82 Z M95 132 L76 66 M138 82 L152 132 M138 82 L132 58 L150 52\" fill=\"none\" stroke=\"#000\" stroke-width=\"16\"/><path d=\"M48 132 L95 132 L138 82 L80 82 Z M95 132 L76 66 M138 82 L152 132 M138 82 L132 58 L150 52\" fill=\"none\" stroke=\"#fff\" stroke-width=\"8\"/><path d=\"M60 62 Q76 56 94 62 Q78 70 60 62 Z\" fill=\"#fff\" stroke-width=\"4\"/><circle cx=\"95\" cy=\"132\" r=\"8\" fill=\"#fff\" stroke-width=\"4\"/></g></svg>","truck":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><rect x=\"12\" y=\"52\" width=\"112\" height=\"86\" rx=\"4\" fill=\"#fff\"/><path d=\"M124 138 L124 74 L160 74 L188 106 L188 138 Z\" fill=\"#fff\"/><path d=\"M134 82 L156 82 L176 106 L134 106 Z\" fill=\"#fff\" stroke-width=\"4\"/><rect x=\"182\" y=\"120\" width=\"10\" height=\"10\" fill=\"#fff\" stroke-width=\"3\"/><circle cx=\"42\" cy=\"142\" r=\"17\" fill=\"#fff\"/><circle cx=\"42\" cy=\"142\" r=\"5\" fill=\"#000\"/><circle cx=\"92\" cy=\"142\" r=\"17\" fill=\"#fff\"/><circle cx=\"92\" cy=\"142\" r=\"5\" fill=\"#000\"/><circle cx=\"160\" cy=\"142\" r=\"17\" fill=\"#fff\"/><circle cx=\"160\" cy=\"142\" r=\"5\" fill=\"#000\"/></g></svg>","train":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><circle cx=\"62\" cy=\"30\" r=\"10\" fill=\"#fff\" stroke-width=\"3.5\"/><circle cx=\"80\" cy=\"18\" r=\"13\" fill=\"#fff\" stroke-width=\"3.5\"/><circle cx=\"102\" cy=\"12\" r=\"9\" fill=\"#fff\" stroke-width=\"3.5\"/><path d=\"M50 82 L44 46 L74 46 L68 82 Z\" fill=\"#fff\"/><rect x=\"28\" y=\"80\" width=\"96\" height=\"58\" rx=\"6\" fill=\"#fff\"/><polygon points=\"28,138 10,156 30,156\" fill=\"#fff\"/><rect x=\"120\" y=\"52\" width=\"62\" height=\"86\" fill=\"#fff\"/><rect x=\"110\" y=\"42\" width=\"80\" height=\"13\" rx=\"3\" fill=\"#fff\"/><rect x=\"136\" y=\"66\" width=\"30\" height=\"28\" fill=\"#fff\" stroke-width=\"4\"/><circle cx=\"18\" cy=\"108\" r=\"7\" fill=\"#fff\" stroke-width=\"3.5\"/><path d=\"M4 176 L196 176\" fill=\"none\" stroke-width=\"5\"/><circle cx=\"56\" cy=\"152\" r=\"15\" fill=\"#fff\"/><circle cx=\"96\" cy=\"152\" r=\"15\" fill=\"#fff\"/><circle cx=\"154\" cy=\"150\" r=\"22\" fill=\"#fff\"/><circle cx=\"154\" cy=\"150\" r=\"6\" fill=\"#000\"/></g></svg>"};
-const GEMA_IMG_ALIAS={bicycle:'bike',chicken:'hen',puppy:'dog',kitten:'cat',kitty:'cat',automobile:'car',lorry:'truck',cock:'rooster'};
+const GEMA_IMG={"cat":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M140 168 C178 162 182 118 160 104\" fill=\"none\" stroke-width=\"9\"/><ellipse cx=\"100\" cy=\"145\" rx=\"45\" ry=\"40\" fill=\"#fff\"/><polygon points=\"64,62 60,18 92,44\" fill=\"#fff\"/><polygon points=\"136,62 140,18 108,44\" fill=\"#fff\"/><circle cx=\"100\" cy=\"82\" r=\"42\" fill=\"#fff\"/><ellipse cx=\"84\" cy=\"76\" rx=\"4.5\" ry=\"7\" fill=\"#000\"/><ellipse cx=\"116\" cy=\"76\" rx=\"4.5\" ry=\"7\" fill=\"#000\"/><polygon points=\"94,92 106,92 100,99\" fill=\"#000\" stroke-width=\"3\"/><path d=\"M100 99 Q93 109 86 103 M100 99 Q107 109 114 103\" fill=\"none\" stroke-width=\"3.5\"/><path d=\"M56 90 L80 94 M56 102 L80 100 M144 90 L120 94 M144 102 L120 100\" stroke-width=\"3\"/><ellipse cx=\"84\" cy=\"184\" rx=\"13\" ry=\"8\" fill=\"#fff\"/><ellipse cx=\"116\" cy=\"184\" rx=\"13\" ry=\"8\" fill=\"#fff\"/></g></svg>","dog":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M140 150 Q170 138 166 108\" fill=\"none\" stroke-width=\"9\"/><ellipse cx=\"100\" cy=\"150\" rx=\"42\" ry=\"37\" fill=\"#fff\"/><circle cx=\"100\" cy=\"84\" r=\"40\" fill=\"#fff\"/><ellipse cx=\"62\" cy=\"90\" rx=\"14\" ry=\"30\" transform=\"rotate(18 62 90)\" fill=\"#fff\"/><ellipse cx=\"138\" cy=\"90\" rx=\"14\" ry=\"30\" transform=\"rotate(-18 138 90)\" fill=\"#fff\"/><circle cx=\"87\" cy=\"78\" r=\"5\" fill=\"#000\"/><circle cx=\"113\" cy=\"78\" r=\"5\" fill=\"#000\"/><ellipse cx=\"100\" cy=\"104\" rx=\"19\" ry=\"14\" fill=\"#fff\"/><ellipse cx=\"100\" cy=\"97\" rx=\"8\" ry=\"6\" fill=\"#000\"/><path d=\"M100 103 L100 110 M100 110 Q92 116 87 111 M100 110 Q108 116 113 111\" fill=\"none\" stroke-width=\"3.5\"/><ellipse cx=\"84\" cy=\"184\" rx=\"13\" ry=\"8\" fill=\"#fff\"/><ellipse cx=\"116\" cy=\"184\" rx=\"13\" ry=\"8\" fill=\"#fff\"/></g></svg>","cow":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M72 50 C58 40 58 22 72 16 C70 30 80 40 90 44 Z\" fill=\"#fff\"/><path d=\"M128 50 C142 40 142 22 128 16 C130 30 120 40 110 44 Z\" fill=\"#fff\"/><ellipse cx=\"44\" cy=\"72\" rx=\"24\" ry=\"11\" transform=\"rotate(-15 44 72)\" fill=\"#fff\"/><ellipse cx=\"156\" cy=\"72\" rx=\"24\" ry=\"11\" transform=\"rotate(15 156 72)\" fill=\"#fff\"/><ellipse cx=\"100\" cy=\"95\" rx=\"48\" ry=\"58\" fill=\"#fff\"/><path d=\"M62 70 C60 50 80 42 96 50 C104 62 90 76 76 80 C68 82 63 78 62 70 Z\" fill=\"#000\" stroke-width=\"2\"/><circle cx=\"80\" cy=\"96\" r=\"6\" fill=\"#000\"/><circle cx=\"120\" cy=\"96\" r=\"6\" fill=\"#000\"/><ellipse cx=\"100\" cy=\"142\" rx=\"42\" ry=\"27\" fill=\"#fff\"/><ellipse cx=\"85\" cy=\"142\" rx=\"6\" ry=\"9\" fill=\"#000\"/><ellipse cx=\"115\" cy=\"142\" rx=\"6\" ry=\"9\" fill=\"#000\"/><path d=\"M88 160 Q100 166 112 160\" fill=\"none\" stroke-width=\"3.5\"/></g></svg>","duck":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><polygon points=\"148,122 180,106 166,146\" fill=\"#fff\"/><ellipse cx=\"105\" cy=\"142\" rx=\"62\" ry=\"34\" fill=\"#fff\"/><circle cx=\"62\" cy=\"84\" r=\"28\" fill=\"#fff\"/><path d=\"M38 86 Q10 86 14 98 Q28 106 42 98 Z\" fill=\"#fff\"/><circle cx=\"60\" cy=\"77\" r=\"4.5\" fill=\"#000\"/><path d=\"M92 132 Q122 112 150 134 Q122 158 92 132 Z\" fill=\"#fff\"/><path d=\"M10 184 q15 -9 30 0 t30 0 t30 0 t30 0 t30 0 t30 0\" fill=\"none\" stroke-width=\"4\"/></g></svg>","hen":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><polygon points=\"148,108 170,70 182,98 160,128\" fill=\"#fff\"/><ellipse cx=\"105\" cy=\"125\" rx=\"55\" ry=\"44\" fill=\"#fff\"/><path d=\"M95 168 L95 186 M85 190 L95 186 L104 190 M118 168 L118 186 M108 190 L118 186 L127 190\" fill=\"none\" stroke-width=\"4\"/><path d=\"M58 56 q3 -12 10 -3 q4 -12 10 -2 q5 -9 8 4 Z\" fill=\"#fff\"/><circle cx=\"70\" cy=\"76\" r=\"25\" fill=\"#fff\"/><polygon points=\"47,70 30,77 47,84\" fill=\"#fff\"/><ellipse cx=\"50\" cy=\"94\" rx=\"5\" ry=\"8\" fill=\"#fff\" stroke-width=\"4\"/><circle cx=\"66\" cy=\"70\" r=\"4.5\" fill=\"#000\"/><path d=\"M92 118 Q120 102 142 122 Q118 148 92 118 Z\" fill=\"#fff\"/><ellipse cx=\"168\" cy=\"178\" rx=\"13\" ry=\"16\" fill=\"#fff\" stroke-width=\"4\"/></g></svg>","rooster":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M128 122 C132 48 196 36 192 98 C178 72 162 82 150 126 Z\" fill=\"#fff\"/><path d=\"M140 134 C166 96 200 106 188 148 C176 128 162 130 150 144 Z\" fill=\"#fff\"/><path d=\"M136 112 C150 70 176 62 178 80 C164 78 152 92 146 118 Z\" fill=\"#fff\"/><ellipse cx=\"108\" cy=\"132\" rx=\"46\" ry=\"38\" fill=\"#fff\"/><path d=\"M100 170 L100 188 M89 192 L100 188 L110 192 M120 168 L120 188 M110 192 L120 188 L130 192 M100 178 L93 176 M120 178 L113 176\" fill=\"none\" stroke-width=\"4\"/><path d=\"M52 56 q0 -22 13 -10 q3 -22 16 -8 q6 -20 16 -4 q6 2 0 16 Z\" fill=\"#fff\"/><circle cx=\"74\" cy=\"78\" r=\"26\" fill=\"#fff\"/><polygon points=\"50,72 30,79 50,88\" fill=\"#fff\"/><ellipse cx=\"54\" cy=\"102\" rx=\"8\" ry=\"13\" fill=\"#fff\" stroke-width=\"4\"/><circle cx=\"71\" cy=\"72\" r=\"4.5\" fill=\"#000\"/><path d=\"M92 126 Q122 108 146 128 Q120 156 92 126 Z\" fill=\"#fff\"/></g></svg>","car":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M18 132 L18 106 Q20 95 40 93 L60 92 L80 64 Q85 58 96 58 L134 58 Q146 58 152 66 L170 92 Q186 94 186 106 L186 132 Z\" fill=\"#fff\"/><path d=\"M68 92 L86 68 L110 68 L110 92 Z M118 68 L140 68 L156 92 L118 92 Z\" fill=\"#fff\" stroke-width=\"4\"/><path d=\"M114 96 L114 128 M120 108 L130 108\" fill=\"none\" stroke-width=\"4\"/><circle cx=\"178\" cy=\"108\" r=\"5\" fill=\"#fff\" stroke-width=\"3\"/><circle cx=\"56\" cy=\"134\" r=\"19\" fill=\"#fff\"/><circle cx=\"56\" cy=\"134\" r=\"6\" fill=\"#000\"/><circle cx=\"150\" cy=\"134\" r=\"19\" fill=\"#fff\"/><circle cx=\"150\" cy=\"134\" r=\"6\" fill=\"#000\"/></g></svg>","bus":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><rect x=\"12\" y=\"46\" width=\"176\" height=\"100\" rx=\"12\" fill=\"#fff\"/><rect x=\"24\" y=\"58\" width=\"30\" height=\"30\" rx=\"3\" fill=\"#fff\" stroke-width=\"4\"/><rect x=\"62\" y=\"58\" width=\"30\" height=\"30\" rx=\"3\" fill=\"#fff\" stroke-width=\"4\"/><rect x=\"100\" y=\"58\" width=\"30\" height=\"30\" rx=\"3\" fill=\"#fff\" stroke-width=\"4\"/><rect x=\"142\" y=\"58\" width=\"36\" height=\"72\" rx=\"3\" fill=\"#fff\" stroke-width=\"4\"/><path d=\"M160 60 L160 128 M12 106 L142 106\" fill=\"none\" stroke-width=\"4\"/><circle cx=\"184\" cy=\"134\" r=\"4\" fill=\"#fff\" stroke-width=\"3\"/><circle cx=\"52\" cy=\"148\" r=\"18\" fill=\"#fff\"/><circle cx=\"52\" cy=\"148\" r=\"6\" fill=\"#000\"/><circle cx=\"148\" cy=\"148\" r=\"18\" fill=\"#fff\"/><circle cx=\"148\" cy=\"148\" r=\"6\" fill=\"#000\"/></g></svg>","bike":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><circle cx=\"48\" cy=\"132\" r=\"36\" fill=\"#fff\" stroke-width=\"6\"/><circle cx=\"48\" cy=\"132\" r=\"26\" fill=\"none\" stroke-width=\"3\"/><circle cx=\"48\" cy=\"132\" r=\"4\" fill=\"#000\"/><circle cx=\"152\" cy=\"132\" r=\"36\" fill=\"#fff\" stroke-width=\"6\"/><circle cx=\"152\" cy=\"132\" r=\"26\" fill=\"none\" stroke-width=\"3\"/><circle cx=\"152\" cy=\"132\" r=\"4\" fill=\"#000\"/><path d=\"M48 132 L95 132 L138 82 L80 82 Z M95 132 L76 66 M138 82 L152 132 M138 82 L132 58 L150 52\" fill=\"none\" stroke=\"#000\" stroke-width=\"16\"/><path d=\"M48 132 L95 132 L138 82 L80 82 Z M95 132 L76 66 M138 82 L152 132 M138 82 L132 58 L150 52\" fill=\"none\" stroke=\"#fff\" stroke-width=\"8\"/><path d=\"M60 62 Q76 56 94 62 Q78 70 60 62 Z\" fill=\"#fff\" stroke-width=\"4\"/><circle cx=\"95\" cy=\"132\" r=\"8\" fill=\"#fff\" stroke-width=\"4\"/></g></svg>","truck":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><rect x=\"12\" y=\"52\" width=\"112\" height=\"86\" rx=\"4\" fill=\"#fff\"/><path d=\"M124 138 L124 74 L160 74 L188 106 L188 138 Z\" fill=\"#fff\"/><path d=\"M134 82 L156 82 L176 106 L134 106 Z\" fill=\"#fff\" stroke-width=\"4\"/><rect x=\"182\" y=\"120\" width=\"10\" height=\"10\" fill=\"#fff\" stroke-width=\"3\"/><circle cx=\"42\" cy=\"142\" r=\"17\" fill=\"#fff\"/><circle cx=\"42\" cy=\"142\" r=\"5\" fill=\"#000\"/><circle cx=\"92\" cy=\"142\" r=\"17\" fill=\"#fff\"/><circle cx=\"92\" cy=\"142\" r=\"5\" fill=\"#000\"/><circle cx=\"160\" cy=\"142\" r=\"17\" fill=\"#fff\"/><circle cx=\"160\" cy=\"142\" r=\"5\" fill=\"#000\"/></g></svg>","train":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><circle cx=\"62\" cy=\"30\" r=\"10\" fill=\"#fff\" stroke-width=\"3.5\"/><circle cx=\"80\" cy=\"18\" r=\"13\" fill=\"#fff\" stroke-width=\"3.5\"/><circle cx=\"102\" cy=\"12\" r=\"9\" fill=\"#fff\" stroke-width=\"3.5\"/><path d=\"M50 82 L44 46 L74 46 L68 82 Z\" fill=\"#fff\"/><rect x=\"28\" y=\"80\" width=\"96\" height=\"58\" rx=\"6\" fill=\"#fff\"/><polygon points=\"28,138 10,156 30,156\" fill=\"#fff\"/><rect x=\"120\" y=\"52\" width=\"62\" height=\"86\" fill=\"#fff\"/><rect x=\"110\" y=\"42\" width=\"80\" height=\"13\" rx=\"3\" fill=\"#fff\"/><rect x=\"136\" y=\"66\" width=\"30\" height=\"28\" fill=\"#fff\" stroke-width=\"4\"/><circle cx=\"18\" cy=\"108\" r=\"7\" fill=\"#fff\" stroke-width=\"3.5\"/><path d=\"M4 176 L196 176\" fill=\"none\" stroke-width=\"5\"/><circle cx=\"56\" cy=\"152\" r=\"15\" fill=\"#fff\"/><circle cx=\"96\" cy=\"152\" r=\"15\" fill=\"#fff\"/><circle cx=\"154\" cy=\"150\" r=\"22\" fill=\"#fff\"/><circle cx=\"154\" cy=\"150\" r=\"6\" fill=\"#000\"/></g></svg>","pig":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M170 112 q16 -6 8 -18 q-9 -5 -11 6\" fill=\"none\" stroke-width=\"4\"/><rect x=\"80\" y=\"145\" width=\"14\" height=\"30\" rx=\"3\" fill=\"#fff\"/><rect x=\"100\" y=\"148\" width=\"14\" height=\"28\" rx=\"3\" fill=\"#fff\"/><rect x=\"135\" y=\"145\" width=\"14\" height=\"30\" rx=\"3\" fill=\"#fff\"/><rect x=\"152\" y=\"142\" width=\"14\" height=\"30\" rx=\"3\" fill=\"#fff\"/><ellipse cx=\"118\" cy=\"118\" rx=\"58\" ry=\"40\" fill=\"#fff\"/><polygon points=\"46,76 40,48 66,64\" fill=\"#fff\"/><polygon points=\"76,70 84,44 94,70\" fill=\"#fff\"/><circle cx=\"64\" cy=\"100\" r=\"34\" fill=\"#fff\"/><ellipse cx=\"36\" cy=\"108\" rx=\"15\" ry=\"12\" fill=\"#fff\"/><ellipse cx=\"31\" cy=\"108\" rx=\"2.5\" ry=\"4\" fill=\"#000\" stroke-width=\"1\"/><ellipse cx=\"41\" cy=\"108\" rx=\"2.5\" ry=\"4\" fill=\"#000\" stroke-width=\"1\"/><circle cx=\"62\" cy=\"90\" r=\"4.5\" fill=\"#000\"/></g></svg>","bird":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M14 168 L190 168 M150 168 q16 -18 30 -10 q-10 14 -30 10\" fill=\"none\" stroke-width=\"5\"/><path d=\"M92 142 L88 166 M112 142 L110 166\" fill=\"none\" stroke-width=\"4\"/><polygon points=\"140,100 186,84 180,116 146,122\" fill=\"#fff\"/><ellipse cx=\"102\" cy=\"112\" rx=\"50\" ry=\"36\" fill=\"#fff\"/><circle cx=\"62\" cy=\"80\" r=\"27\" fill=\"#fff\"/><polygon points=\"37,76 18,84 37,92\" fill=\"#fff\"/><circle cx=\"57\" cy=\"75\" r=\"4.5\" fill=\"#000\"/><path d=\"M88 106 Q118 86 146 106 Q118 132 88 106 Z\" fill=\"#fff\"/></g></svg>","taxi":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><rect x=\"86\" y=\"36\" width=\"42\" height=\"20\" rx=\"3\" fill=\"#fff\" stroke-width=\"4\"/><text x=\"107\" y=\"51\" text-anchor=\"middle\" font-size=\"13\" font-family=\"Arial\" font-weight=\"bold\" stroke=\"none\" fill=\"#000\">TAXI</text><path d=\"M18 132 L18 106 Q20 95 40 93 L60 92 L80 64 Q85 58 96 58 L134 58 Q146 58 152 66 L170 92 Q186 94 186 106 L186 132 Z\" fill=\"#fff\"/><path d=\"M68 92 L86 68 L110 68 L110 92 Z M118 68 L140 68 L156 92 L118 92 Z\" fill=\"#fff\" stroke-width=\"4\"/><rect x=\"22\" y=\"104\" width=\"12\" height=\"10\" fill=\"#000\" stroke-width=\"1.5\"/><rect x=\"34\" y=\"104\" width=\"12\" height=\"10\" fill=\"#fff\" stroke-width=\"1.5\"/><rect x=\"46\" y=\"104\" width=\"12\" height=\"10\" fill=\"#000\" stroke-width=\"1.5\"/><rect x=\"58\" y=\"104\" width=\"12\" height=\"10\" fill=\"#fff\" stroke-width=\"1.5\"/><rect x=\"70\" y=\"104\" width=\"12\" height=\"10\" fill=\"#000\" stroke-width=\"1.5\"/><rect x=\"82\" y=\"104\" width=\"12\" height=\"10\" fill=\"#fff\" stroke-width=\"1.5\"/><rect x=\"94\" y=\"104\" width=\"12\" height=\"10\" fill=\"#000\" stroke-width=\"1.5\"/><rect x=\"106\" y=\"104\" width=\"12\" height=\"10\" fill=\"#fff\" stroke-width=\"1.5\"/><rect x=\"118\" y=\"104\" width=\"12\" height=\"10\" fill=\"#000\" stroke-width=\"1.5\"/><rect x=\"130\" y=\"104\" width=\"12\" height=\"10\" fill=\"#fff\" stroke-width=\"1.5\"/><rect x=\"142\" y=\"104\" width=\"12\" height=\"10\" fill=\"#000\" stroke-width=\"1.5\"/><rect x=\"154\" y=\"104\" width=\"12\" height=\"10\" fill=\"#fff\" stroke-width=\"1.5\"/><rect x=\"166\" y=\"104\" width=\"12\" height=\"10\" fill=\"#000\" stroke-width=\"1.5\"/><rect x=\"178\" y=\"104\" width=\"12\" height=\"10\" fill=\"#fff\" stroke-width=\"1.5\"/><circle cx=\"56\" cy=\"134\" r=\"19\" fill=\"#fff\"/><circle cx=\"56\" cy=\"134\" r=\"6\" fill=\"#000\"/><circle cx=\"150\" cy=\"134\" r=\"19\" fill=\"#fff\"/><circle cx=\"150\" cy=\"134\" r=\"6\" fill=\"#000\"/></g></svg>","home":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><rect x=\"128\" y=\"44\" width=\"16\" height=\"40\" fill=\"#fff\"/><rect x=\"45\" y=\"95\" width=\"110\" height=\"85\" fill=\"#fff\"/><polygon points=\"28,102 100,38 172,102\" fill=\"#fff\"/><rect x=\"88\" y=\"128\" width=\"26\" height=\"52\" fill=\"#fff\"/><circle cx=\"108\" cy=\"156\" r=\"2.5\" fill=\"#000\"/><rect x=\"56\" y=\"112\" width=\"24\" height=\"22\" fill=\"#fff\" stroke-width=\"4\"/><path d=\"M68 112 V134 M56 123 H80\" stroke-width=\"3\"/><rect x=\"122\" y=\"112\" width=\"24\" height=\"22\" fill=\"#fff\" stroke-width=\"4\"/><path d=\"M134 112 V134 M122 123 H146\" stroke-width=\"3\"/></g></svg>","school":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M100 56 V20\" stroke-width=\"4\"/><polygon points=\"100,20 128,28 100,38\" fill=\"#fff\" stroke-width=\"4\"/><rect x=\"16\" y=\"90\" width=\"168\" height=\"90\" fill=\"#fff\"/><polygon points=\"64,90 100,56 136,90\" fill=\"#fff\"/><circle cx=\"100\" cy=\"76\" r=\"8\" fill=\"#fff\" stroke-width=\"3\"/><path d=\"M100 76 V71 M100 76 H104\" stroke-width=\"2\"/><rect x=\"87\" y=\"138\" width=\"26\" height=\"42\" fill=\"#fff\"/><rect x=\"28\" y=\"104\" width=\"22\" height=\"20\" fill=\"#fff\" stroke-width=\"4\"/><rect x=\"28\" y=\"142\" width=\"22\" height=\"20\" fill=\"#fff\" stroke-width=\"4\"/><rect x=\"58\" y=\"104\" width=\"22\" height=\"20\" fill=\"#fff\" stroke-width=\"4\"/><rect x=\"58\" y=\"142\" width=\"22\" height=\"20\" fill=\"#fff\" stroke-width=\"4\"/><rect x=\"120\" y=\"104\" width=\"22\" height=\"20\" fill=\"#fff\" stroke-width=\"4\"/><rect x=\"120\" y=\"142\" width=\"22\" height=\"20\" fill=\"#fff\" stroke-width=\"4\"/><rect x=\"150\" y=\"104\" width=\"22\" height=\"20\" fill=\"#fff\" stroke-width=\"4\"/><rect x=\"150\" y=\"142\" width=\"22\" height=\"20\" fill=\"#fff\" stroke-width=\"4\"/></g></svg>","church":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M100 4 V22 M92 12 H108\" stroke-width=\"5\"/><rect x=\"80\" y=\"50\" width=\"40\" height=\"46\" fill=\"#fff\"/><polygon points=\"74,52 100,20 126,52\" fill=\"#fff\"/><rect x=\"56\" y=\"94\" width=\"88\" height=\"86\" fill=\"#fff\"/><circle cx=\"100\" cy=\"116\" r=\"10\" fill=\"#fff\" stroke-width=\"4\"/><path d=\"M86 180 V152 Q100 134 114 152 V180 Z\" fill=\"#fff\"/><rect x=\"92\" y=\"62\" width=\"16\" height=\"18\" rx=\"8\" fill=\"#fff\" stroke-width=\"3\"/></g></svg>","store":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><rect x=\"24\" y=\"72\" width=\"152\" height=\"108\" fill=\"#fff\"/><path d=\"M16 72 L184 72 L184 94 q-10.5 12 -21 0 q-10.5 12 -21 0 q-10.5 12 -21 0 q-10.5 12 -21 0 q-10.5 12 -21 0 q-10.5 12 -21 0 q-10.5 12 -21 0 q-10.5 12 -21 0 Z\" fill=\"#fff\"/><path d=\"M58 72 V94 M100 72 V94 M142 72 V94\" stroke-width=\"4\"/><rect x=\"38\" y=\"112\" width=\"62\" height=\"44\" fill=\"#fff\"/><path d=\"M38 134 H100\" stroke-width=\"3\"/><rect x=\"116\" y=\"112\" width=\"44\" height=\"68\" fill=\"#fff\"/><circle cx=\"150\" cy=\"148\" r=\"3\" fill=\"#000\"/><rect x=\"56\" y=\"40\" width=\"88\" height=\"26\" rx=\"4\" fill=\"#fff\" stroke-width=\"4\"/></g></svg>","market":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M30 70 V176 M170 70 V176\" stroke-width=\"6\"/><path d=\"M14 72 L100 30 L186 72 Z\" fill=\"#fff\"/><path d=\"M14 72 q14 14 28 0 q14 14 29 0 q14 14 29 0 q14 14 29 0 q14 14 29 0 q14 14 29 0\" fill=\"#fff\" stroke-width=\"4\"/><rect x=\"22\" y=\"128\" width=\"156\" height=\"18\" fill=\"#fff\"/><rect x=\"36\" y=\"146\" width=\"128\" height=\"30\" fill=\"#fff\"/><circle cx=\"46\" cy=\"116\" r=\"11\" fill=\"#fff\" stroke-width=\"4\"/><circle cx=\"70\" cy=\"116\" r=\"11\" fill=\"#fff\" stroke-width=\"4\"/><circle cx=\"94\" cy=\"116\" r=\"11\" fill=\"#fff\" stroke-width=\"4\"/><path d=\"M112 128 q8 -32 28 -34 q-4 16 -10 34 Z M136 128 q10 -30 30 -30 q-6 18 -12 30 Z\" fill=\"#fff\" stroke-width=\"4\"/></g></svg>","park":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M6 180 L194 180\" stroke-width=\"5\"/><rect x=\"48\" y=\"104\" width=\"18\" height=\"76\" fill=\"#fff\"/><path d=\"M22 100 C4 88 14 56 36 58 C38 30 76 26 84 48 C106 44 112 80 94 92 C96 110 62 116 56 104 C44 116 20 112 22 100 Z\" fill=\"#fff\"/><rect x=\"106\" y=\"138\" width=\"84\" height=\"10\" rx=\"2\" fill=\"#fff\"/><rect x=\"106\" y=\"112\" width=\"84\" height=\"10\" rx=\"2\" fill=\"#fff\"/><path d=\"M114 148 V180 M182 148 V180 M114 122 V138 M182 122 V138\" stroke-width=\"5\"/></g></svg>","library":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><rect x=\"16\" y=\"166\" width=\"168\" height=\"14\" fill=\"#fff\"/><rect x=\"24\" y=\"72\" width=\"152\" height=\"14\" fill=\"#fff\"/><polygon points=\"18,72 100,28 182,72\" fill=\"#fff\"/><rect x=\"34\" y=\"86\" width=\"20\" height=\"80\" fill=\"#fff\"/><rect x=\"72\" y=\"86\" width=\"20\" height=\"80\" fill=\"#fff\"/><rect x=\"108\" y=\"86\" width=\"20\" height=\"80\" fill=\"#fff\"/><rect x=\"146\" y=\"86\" width=\"20\" height=\"80\" fill=\"#fff\"/><path d=\"M100 48 Q88 42 78 46 V62 Q88 58 100 64 Q112 58 122 62 V46 Q112 42 100 48 Z M100 48 V64\" fill=\"#fff\" stroke-width=\"3\"/></g></svg>","office":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><rect x=\"52\" y=\"14\" width=\"96\" height=\"166\" fill=\"#fff\"/><rect x=\"64\" y=\"26\" width=\"18\" height=\"16\" fill=\"#fff\" stroke-width=\"3\"/><rect x=\"64\" y=\"48\" width=\"18\" height=\"16\" fill=\"#fff\" stroke-width=\"3\"/><rect x=\"64\" y=\"70\" width=\"18\" height=\"16\" fill=\"#fff\" stroke-width=\"3\"/><rect x=\"64\" y=\"92\" width=\"18\" height=\"16\" fill=\"#fff\" stroke-width=\"3\"/><rect x=\"64\" y=\"114\" width=\"18\" height=\"16\" fill=\"#fff\" stroke-width=\"3\"/><rect x=\"64\" y=\"136\" width=\"18\" height=\"16\" fill=\"#fff\" stroke-width=\"3\"/><rect x=\"91\" y=\"26\" width=\"18\" height=\"16\" fill=\"#fff\" stroke-width=\"3\"/><rect x=\"91\" y=\"48\" width=\"18\" height=\"16\" fill=\"#fff\" stroke-width=\"3\"/><rect x=\"91\" y=\"70\" width=\"18\" height=\"16\" fill=\"#fff\" stroke-width=\"3\"/><rect x=\"91\" y=\"92\" width=\"18\" height=\"16\" fill=\"#fff\" stroke-width=\"3\"/><rect x=\"91\" y=\"114\" width=\"18\" height=\"16\" fill=\"#fff\" stroke-width=\"3\"/><rect x=\"91\" y=\"136\" width=\"18\" height=\"16\" fill=\"#fff\" stroke-width=\"3\"/><rect x=\"118\" y=\"26\" width=\"18\" height=\"16\" fill=\"#fff\" stroke-width=\"3\"/><rect x=\"118\" y=\"48\" width=\"18\" height=\"16\" fill=\"#fff\" stroke-width=\"3\"/><rect x=\"118\" y=\"70\" width=\"18\" height=\"16\" fill=\"#fff\" stroke-width=\"3\"/><rect x=\"118\" y=\"92\" width=\"18\" height=\"16\" fill=\"#fff\" stroke-width=\"3\"/><rect x=\"118\" y=\"114\" width=\"18\" height=\"16\" fill=\"#fff\" stroke-width=\"3\"/><rect x=\"118\" y=\"136\" width=\"18\" height=\"16\" fill=\"#fff\" stroke-width=\"3\"/><rect x=\"86\" y=\"148\" width=\"28\" height=\"32\" fill=\"#fff\"/><path d=\"M100 148 V180\" stroke-width=\"3\"/></g></svg>","playground":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M6 182 L194 182\" stroke-width=\"5\"/><path d=\"M40 182 V60 M72 182 V60\" stroke-width=\"6\"/><path d=\"M40 80 H72 M40 104 H72 M40 128 H72 M40 152 H72\" stroke-width=\"4\"/><rect x=\"34\" y=\"52\" width=\"46\" height=\"10\" fill=\"#fff\" stroke-width=\"4\"/><path d=\"M72 62 C110 66 120 150 176 170 L186 182 L170 182 C112 166 104 88 72 80 Z\" fill=\"#fff\"/></g></svg>","gym":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 200\"><g stroke=\"#000\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><rect x=\"56\" y=\"92\" width=\"88\" height=\"16\" rx=\"3\" fill=\"#fff\"/><rect x=\"30\" y=\"62\" width=\"26\" height=\"76\" rx=\"5\" fill=\"#fff\"/><rect x=\"144\" y=\"62\" width=\"26\" height=\"76\" rx=\"5\" fill=\"#fff\"/><rect x=\"16\" y=\"76\" width=\"14\" height=\"48\" rx=\"4\" fill=\"#fff\"/><rect x=\"170\" y=\"76\" width=\"14\" height=\"48\" rx=\"4\" fill=\"#fff\"/></g></svg>"};
+const GEMA_EMOJI={"sheep": "🐑", "horse": "🐴", "goat": "🐐", "fish": "🐟", "rabbit": "🐰", "frog": "🐸", "lion": "🦁", "elephant": "🐘", "monkey": "🐒", "bear": "🐻", "turtle": "🐢", "snake": "🐍", "mouse": "🐭", "butterfly": "🦋", "bee": "🐝", "tiger": "🐯", "giraffe": "🦒", "owl": "🦉", "chick": "🐤", "parrot": "🦜", "banana": "🍌", "apple": "🍎", "orange": "🍊", "pineapple": "🍍", "grape": "🍇", "grapes": "🍇", "mango": "🥭", "watermelon": "🍉", "strawberry": "🍓", "lemon": "🍋", "pear": "🍐", "coconut": "🥥", "tomato": "🍅", "carrot": "🥕", "corn": "🌽", "bread": "🍞", "milk": "🥛", "rice": "🍚", "egg": "🥚", "water": "💧", "juice": "🧃", "cake": "🎂", "pizza": "🍕", "sandwich": "🥪", "lunch": "🍱", "cheese": "🧀", "cookie": "🍪", "ice cream": "🍦", "soup": "🍲", "book": "📖", "pencil": "✏️", "bag": "🎒", "backpack": "🎒", "ruler": "📏", "scissors": "✂️", "crayon": "🖍️", "chair": "🪑", "clock": "⏰", "ball": "⚽", "kite": "🪁", "teddy bear": "🧸", "computer": "💻", "phone": "📱", "notebook": "📓", "door": "🚪", "bed": "🛏️", "key": "🔑", "plane": "✈️", "airplane": "✈️", "boat": "⛵", "ship": "🚢", "motorcycle": "🏍️", "helicopter": "🚁", "ambulance": "🚑", "rocket": "🚀", "beach": "🏖️", "sun": "☀️", "umbrella": "⛱️", "shell": "🐚", "wave": "🌊", "bucket": "🪣", "sand": "🏖️", "picnic": "🧺", "sunscreen": "🧴", "hat": "👒", "suitcase": "🧳", "map": "🗺️", "camera": "📷", "tent": "⛺", "mountain": "⛰️", "river": "🏞️", "eye": "👁️", "ear": "👂", "nose": "👃", "mouth": "👄", "hand": "✋", "foot": "🦶", "leg": "🦵", "arm": "💪", "tooth": "🦷", "mom": "👩", "mother": "👩", "dad": "👨", "father": "👨", "baby": "👶", "boy": "👦", "girl": "👧", "grandma": "👵", "grandmother": "👵", "grandpa": "👴", "grandfather": "👴", "teacher": "🧑‍🏫", "doctor": "🧑‍⚕️", "family": "👨‍👩‍👧", "rain": "🌧️", "cloud": "☁️", "star": "⭐", "moon": "🌙", "tree": "🌳", "flower": "🌸", "snow": "❄️", "rainbow": "🌈", "leaf": "🍃", "shirt": "👕", "dress": "👗", "shoes": "👟", "shoe": "👟", "socks": "🧦", "pants": "👖", "cap": "🧢", "jacket": "🧥", "glasses": "👓", "money": "💵", "cart": "🛒", "basket": "🧺", "hospital": "🏥", "bank": "🏦", "bakery": "🥖", "zoo": "🦁", "farm": "🚜", "city": "🏙️", "street": "🛣️", "bridge": "🌉", "police": "👮", "museum": "🏛️", "restaurant": "🍽️", "pool": "🏊"};
+const GEMA_IMG_ALIAS={bicycle:'bike',house:'home',shop:'store',supermarket:'market',chicken:'hen',puppy:'dog',kitten:'cat',kitty:'cat',automobile:'car',lorry:'truck',cock:'rooster'};
 function gemaImgKey(w){let k=String(w||'').toLowerCase().trim();if(GEMA_IMG_ALIAS[k])k=GEMA_IMG_ALIAS[k];if(!GEMA_IMG[k]&&k.endsWith('s')&&GEMA_IMG[k.slice(0,-1)])k=k.slice(0,-1);return GEMA_IMG[k]?k:null;}
 function gemaImgs(html){
-  return String(html||'').replace(/\[\[IMG:\s*([^\]]+?)\s*\]\]/gi,(m,w)=>{
-    const k=gemaImgKey(w);const safe=String(w).replace(/[<>"]/g,'');
+  return String(html||'').replace(/\[\[IMG:\s*([^\]]+?)\s*\]\]/gi,(m,w0)=>{
+    const [w,lab]=String(w0).split('|').map(x=>x.trim());
+    const k=gemaImgKey(w);const safe=String(lab||w).replace(/[<>"]/g,'');
     if(k)return `<img class="gema-img" alt="${safe}" src="data:image/svg+xml;base64,${btoa(GEMA_IMG[k])}"/>`;
+    const lw=String(w).toLowerCase().trim();const e=GEMA_EMOJI[lw]||GEMA_EMOJI[lw.replace(/e?s$/,'')];
+    if(e)return `<span class="gema-emoji" data-e="${e}" data-w="${safe}">${e}<br><small>${safe}</small></span>`;
     return `<span class="gema-draw">✏️ Dibuja:<br><b>${safe}</b></span>`;
   });
 }
@@ -757,6 +837,438 @@ function gemaTexto(html){
 }
 </script>
 <script>
+/* ==== GeMA · modo asignatura en español ==== */
+/* =====================================================================
+   GeMA · Modo "Asignatura en español" (PanaMentorLabs)
+   Estructura basada en las guías oficiales de MEDUCA:
+   - Guía del estudiante Ciencias Naturales 6 (MEDUCA-BID, 2024): A. Exploro ·
+     B. Conozco el tema · C. Comprendo la información · D. Aplico mis conocimientos ·
+     Evaluación sumativa · Instrumento de autoevaluación · Bibliografía.
+   - Guía para Estudiantes (MEDUCA-SENACYT, 2021, en casa): aprendizaje esperado,
+     habilidades, íconos (familia, tiempo, Sabías que…, preguntas, autoevaluación),
+     experimento casero, clave de respuestas, Amplía tus conocimientos.
+   - Orientaciones para la elaboración de guías didácticas (MEDUCA, 2013):
+     datos generales, situación de aprendizaje (contenidos C/P/A), evaluación
+     diagnóstica / formativa / sumativa, refuerzo, cronograma, recursos, bibliografía.
+   Este modo NO modifica nada del modo Inglés (GEMA_NIVELES).
+   ===================================================================== */
+const GEMA_ES = (() => {
+  const ESCALA = 'Excelente 5.0 | Satisfactorio 3.5–4.9 | En proceso 2.0–3.4 | Inicio 1.0–1.9';
+
+  /* ---------- Perfil por nivel ---------- */
+  const NIVEL = {
+    preescolar: {
+      lector: 'NO lee ni escribe. El adulto le lee todo en voz alta y el niño responde hablando, señalando, coloreando o dibujando.',
+      minutos: '15 a 20 minutos al día, 5 días',
+      instr: 'Todas las instrucciones van dirigidas al ADULTO y empiezan con "Adulto: …".',
+      texto: 'Un relato o explicación de 5 a 8 oraciones cortas que el adulto lee en voz alta, con dibujos de apoyo.',
+      actividades: 'observar y conversar, señalar, encerrar, colorear, clasificar dibujos, contar objetos, recortar y pegar, moverse, juegos en familia',
+      prohibidas: 'textos para que el niño lea · escribir oraciones · preguntas escritas · selección múltiple · notas numéricas',
+      evaluacion: 'LISTA DE COTEJO para el adulto y el docente con la escala LHL = Lo he logrado · LEL = Lo estoy logrando · LVL = Lo voy a lograr; 4 a 5 conductas observables. SIN prueba escrita, SIN notas numéricas.',
+      prueba: false,
+      escalaAuto: ['😀', 'Lo he logrado (LHL)', '🙂', 'Lo estoy logrando (LEL)', '🙁', 'Lo voy a lograr (LVL)'],
+      descAuto: ['Lo hago solo/a', 'Lo hago con ayuda', 'Lo seguimos practicando'],
+    },
+    primerCiclo: {
+      lector: 'Está aprendiendo a leer y escribir: lee palabras y oraciones cortas con apoyo del adulto.',
+      minutos: '20 a 30 minutos al día, 5 días',
+      instr: 'Instrucciones muy cortas para el estudiante (una acción por instrucción) y una indicación "Adulto: …" cuando haga falta leerle o ayudarle.',
+      texto: 'Texto de 6 a 12 oraciones cortas (máximo 12 palabras cada una), con dibujos de apoyo.',
+      actividades: 'unir, encerrar, colorear, marcar ✓ o ✗, completar con un banco de palabras, ordenar dibujos, contar y escribir números, dibujar y escribir una palabra u oración corta',
+      prohibidas: 'textos de más de 12 oraciones · preguntas que exijan párrafos · selección múltiple con más de 3 opciones',
+      evaluacion: `PRUEBA CORTA de 5 a 6 ítems sencillos (con dibujos cuando ayude) que sumen 10 puntos, y RÚBRICA de 3 criterios para el producto con la escala ${ESCALA}.`,
+      prueba: true,
+      escalaAuto: ['😀', '¡Lo logré!', '🙂', 'Casi lo logro', '🙁', 'Necesito ayuda'],
+      descAuto: ['Lo hago solo/a', 'Lo hago con un poco de ayuda', 'Todavía necesito ayuda'],
+    },
+    segundoCiclo: {
+      lector: 'Lee y escribe con autonomía; un adulto de la casa acompaña y revisa.',
+      minutos: '30 a 45 minutos al día, 5 días',
+      instr: 'Instrucciones dirigidas al estudiante en segunda persona (tú), claras y numeradas.',
+      texto: 'Texto expositivo con subtítulos: de 300 a 450 palabras en 3.° y 4.°; de 450 a 650 palabras en 5.° y 6.°.',
+      actividades: 'completar esquemas y cuadros, marcar características, preguntas de comprensión, experimento casero o trabajo práctico, análisis de casos, organizadores gráficos',
+      prohibidas: 'actividades que requieran compañeros de clase o internet como obligatorio',
+      evaluacion: `PRUEBA ESCRITA de 6 a 10 ítems (selección múltiple A–D y 1 o 2 de respuesta abierta) con puntaje por ítem, y RÚBRICA ANALÍTICA del producto (3 a 4 criterios) con la escala ${ESCALA}.`,
+      prueba: true,
+      escalaAuto: ['✅', 'Lo domino', '🔄', 'Lo domino parcialmente', '🆘', 'Debo esforzarme para dominarlo'],
+      descAuto: ['Puedo explicarlo o hacerlo solo/a', 'Lo entiendo, pero necesito repasar', 'Todavía tengo dudas importantes'],
+    },
+    secundaria: {
+      lector: 'Estudiante de premedia o media: lee textos académicos con autonomía.',
+      minutos: '45 a 60 minutos por sesión',
+      instr: 'Instrucciones dirigidas al estudiante en segunda persona (tú), con lenguaje académico.',
+      texto: 'Texto académico de 600 a 900 palabras con subtítulos, conceptos definidos y ejemplos de Panamá.',
+      actividades: 'análisis de datos y fuentes, cuadros comparativos, resolución de problemas, experimento o investigación guiada, argumentación escrita',
+      prohibidas: 'actividades que requieran compañeros de clase o internet como obligatorio',
+      evaluacion: `PRUEBA ESCRITA de 10 a 15 ítems (selección múltiple A–D, respuesta corta y 2 de desarrollo) con puntaje por ítem, y RÚBRICA ANALÍTICA del producto (3 a 4 criterios) con la escala ${ESCALA}.`,
+      prueba: true,
+      escalaAuto: ['✅', 'Lo domino', '🔄', 'Lo domino parcialmente', '🆘', 'Debo esforzarme para dominarlo'],
+      descAuto: ['Puedo explicarlo o hacerlo solo/a', 'Lo entiendo, pero necesito repasar', 'Todavía tengo dudas importantes'],
+    },
+  };
+  const nivel = k => NIVEL[k] || NIVEL.segundoCiclo;
+  const pequeno = k => k === 'preescolar' || k === 'primerCiclo';
+
+  /* ---------- Perfil por asignatura ---------- */
+  const ASIG = [
+    [/cienc|natural|biolog|qu[ií]mic|f[ií]sic/i, 'Ciencias',
+      'Enfoque de indagación científica, como en las guías de Ciencias Naturales de MEDUCA: parte de preguntas, observación y experiencia directa. Incluye "Habilidades científicas que trabajarás" (p. ej. observar, describir, comparar, clasificar, inferir, registrar datos, concluir). La actividad práctica es un EXPERIMENTO CASERO SEGURO o una observación del entorno con: ¿Qué necesitas? (materiales de casa), Procedimiento en pasos numerados, Tabla de registro y Preguntas de conclusión. PROHIBIDO: fuego, electricidad de la red, sustancias peligrosas, cazar o tocar animales silvestres, salir solo de casa.'],
+    [/social|historia|geograf|c[ií]vica|civismo/i, 'Ciencias Sociales',
+      'Usa mapas para completar, líneas de tiempo, testimonios de la familia o la comunidad, fuentes sencillas y comparación de épocas o lugares. Habilidades: ubicar, ordenar en el tiempo, comparar, explicar causas y consecuencias, valorar. Las fechas, nombres y lugares deben ser reales y verificables.'],
+    [/matem/i, 'Matemática',
+      'Cada concepto se explica con un EJEMPLO RESUELTO paso a paso y luego práctica graduada (de fácil a difícil). Usa situaciones de la vida diaria en Panamá (compras en balboas o dólares, medidas, tiempo, la finca, la tienda). Todo ejercicio tiene una sola respuesta correcta, que va en la clave con su procedimiento. Verifica cada cálculo dos veces.'],
+    [/espa[nñ]ol|lengua|comunicaci|lectura|literatura/i, 'Español',
+      'Trabaja comprensión lectora (literal, inferencial y crítica), vocabulario en contexto, ortografía y gramática del grado, y la producción de un texto propio con planificación, borrador y revisión. El texto de lectura puede ser narrativo, informativo o poético según el contenido.'],
+    [/religi|moral|valores|[ée]tica/i, 'Religión, Moral y Valores',
+      'Reflexión personal y en familia, casos de convivencia y compromisos concretos. Respeta la diversidad de creencias de las familias.'],
+    [/tecnolog|familia y desarrollo|agropecuar|artes|m[uú]sica|expresi[oó]n art|educaci[oó]n f[ií]sica/i, 'Área técnica o expresiva',
+      'Privilegia el saber hacer: demostraciones paso a paso, práctica con materiales de casa, seguridad y un producto concreto.'],
+  ];
+  function perfilAsig(asig) {
+    for (const [re, nom, txt] of ASIG) if (re.test(asig || '')) return { nom, txt };
+    return { nom: 'General', txt: 'Adapta las actividades a la naturaleza de la asignatura y a los contenidos del plan.' };
+  }
+
+  /* ---------- Reglas comunes ---------- */
+  const COMUNES = `
+REGLAS DE ESTE MÓDULO (asignatura en español, formato de las guías MEDUCA)
+- TODO en español. PROHIBIDO: destrezas de inglés (Listening, Speaking, Reading, Writing, Mediation), pronunciación entre barras, traducciones al inglés, "I can…", chants o rimas para memorizar vocabulario, y explicaciones gramaticales que no pertenezcan a la asignatura.
+- El contenido es el de la ASIGNATURA: conceptos, procesos y datos correctos para el grado. Usa los INSUMOS DEL PLAN (lecturas, lugares, especies, ejemplos, actividades, prueba escrita) siempre que existan.
+- Contextualiza en Panamá y en la comunidad del estudiante (región y escuela indicadas). Solo lugares, fechas, especies y datos REALES. NO inventes cifras ni porcentajes: si no estás seguro de un dato, no lo pongas. Cuando uses un dato concreto, indica su fuente institucional (p. ej. "Fuente: MiAmbiente").
+- Coherencia: los términos, ejemplos y datos de las actividades y de la evaluación salen del texto de la Sección 3. No se contradicen entre secciones. El producto final se nombra igual en las Secciones 5, 6 y 7.
+- Cada actividad indica entre paréntesis el logro de la Sección 1 que trabaja (p. ej. "(Logro: Describo qué es un ecosistema)"); nunca copies el texto del currículo.
+- Cada actividad trae UN ejemplo resuelto o un modelo. Nunca imprimas la respuesta junto a la pregunta: las respuestas van en la Sección 7 (Clave de respuestas).
+- Se trabaja EN CASA con la familia: nada obligatorio depende de compañeros de clase, internet, celular ni impresora; materiales caseros y de bajo costo. Lo que use internet va marcado como opcional.
+- No cites anexos, fichas, videos ni láminas que el módulo no incluya.
+- Termina siempre cada párrafo, lista y tabla. Si te falta espacio, recorta contenido; nunca dejes una frase a medias.`;
+
+  const IMG = `
+ILUSTRACIONES (grados pequeños)
+- Donde el estudiante deba señalar, encerrar, colorear, unir o contar objetos, escribe el marcador [[IMG:palabra en inglés|palabra en español]] (ej. [[IMG:cow|vaca]], [[IMG:tree|árbol]], [[IMG:river|río]]). La app lo convierte en un dibujo o en un recuadro para dibujar con la palabra en español.
+- En actividades de encerrar o unir, pon cada opción en su propia celda de una tabla.
+- No uses emojis como opciones de respuesta.`;
+
+  function bloque(k, f) {
+    const n = nivel(k), a = perfilAsig(f.asignatura);
+    return `
+NIVEL DEL ESTUDIANTE: ${gradoLbl(f.grado)} (${f.nivel})
+- Perfil lector: ${n.lector}
+- Instrucciones: ${n.instr}
+- Tiempo: ${n.minutos}.
+- Texto de la Sección 3: ${n.texto}
+- Actividades adecuadas: ${n.actividades}.
+- Prohibido en este nivel: ${n.prohibidas}.
+ASIGNATURA: ${f.asignatura} — ${a.txt}
+${COMUNES}
+${pequeno(k) ? IMG : ''}`.trim();
+  }
+
+  /* ---------- Indicaciones por sección ---------- */
+  const spec = {
+    s3: (k, f) => `Genera SOLO el contenido de la Sección 3 "B. Conozco el tema" (sin el título de la sección). Incluye, en este orden:
+1. <h3>📖 Lee la información</h3>: ${nivel(k).texto} Desarrolla el CONTENIDO CONCEPTUAL del plan con los insumos de los planes diarios. Usa <h4> para cada subtítulo y <strong> para los conceptos clave. ${pequeno(k) ? 'Acompaña las ideas con [[IMG:…|…]] cuando ayude.' : ''}
+2. <h3>🗂️ Organizador gráfico</h3>: las ideas principales del texto en una tabla o esquema (p. ej. Concepto | Características | Ejemplo en Panamá). Debe poder copiarse en el cuaderno.
+3. <h3>📝 Vocabulario</h3>: tabla Término | Significado con ${pequeno(k) ? '4 a 6' : '6 a 10'} términos del texto, definidos con palabras sencillas para el grado.
+4. Uno o dos recuadros <div class="sabias"><strong>💡 ¿Sabías que…?</strong> dato curioso y verdadero relacionado con el tema</div>.
+NO incluyas actividades ni preguntas (van en las Secciones 2, 4 y 5). Formato: HTML semántico; <table> para organizador y vocabulario.`,
+
+    s1: (k, f) => `Genera SOLO el contenido de la Sección 1 "Presentación del módulo" (sin el título de la sección). Incluye, en este orden:
+1. <h4>🎯 ¿Qué aprenderás?</h4>: una oración "Al finalizar este módulo podrás…" y una lista <ul> de ${pequeno(k) ? '3' : '3 a 5'} LOGROS en primera persona y en presente, derivados de los indicadores de logro para el trabajo en casa (p. ej. "Describo qué es un ecosistema.", "Propongo acciones para…"). No copies los indicadores.
+2. <h4>🛠️ Habilidades que trabajarás</h4>: 2 o 3 habilidades propias de la asignatura (p. ej. observar, comparar, inferir, resolver, argumentar).
+3. <h4>🧭 Situación de aprendizaje</h4>: un título cercano al estudiante (puede ser una pregunta, p. ej. "¿Quiénes viven en el bosque de mi comunidad?") y una tabla de 2 columnas Tipo de contenido | ¿Qué trabajaremos? con 3 filas: Conceptual, Procedimental y Actitudinal, tomadas del plan.
+4. <h4>👨‍👩‍👧 Trabajo con la familia</h4>: un párrafo corto: qué aprenderá el estudiante y cómo acompañarlo (${nivel(k).minutos}; leer juntos, preguntar, revisar con la clave de la Sección 7 sin dar las respuestas antes).
+NO incluyas datos generales, cronograma ni guía de íconos (la app los agrega).
+Si algún indicador NO tiene relación con el tema del módulo, no lo uses y agrega al final exactamente: <p class="gema-aviso">Indicadores omitidos por no corresponder al tema: [lista]</p>
+Formato: HTML simple. Máx. 320 palabras.`,
+
+    s2: (k, f) => `Genera SOLO el contenido de la Sección 2 "A. Exploro" (evaluación diagnóstica; sin el título de la sección). Incluye:
+1. Un párrafo de bienvenida de 2 o 3 oraciones con una situación cotidiana de la comunidad del estudiante relacionada con el tema, y 2 o 3 preguntas para pensar.
+2. <h3>Actividad 1</h3>: una actividad corta para descubrir lo que ya sabe (${pequeno(k) ? 'observar algo en casa o en el patio y conversar; encerrar o colorear [[IMG:…|…]]' : 'observar algo en casa o en el patio, clasificar, marcar o responder'}). Con ejemplo resuelto.
+${pequeno(k) ? '3. Una pregunta final para dibujar: "Dibuja lo que sabes de…".' : '3. <h3>Lo que sé y lo que quiero saber</h3>: una tabla de 3 columnas — Lo que sé | Lo que quiero saber | Lo que aprendí — con 3 filas vacías. Indica que la columna "Lo que aprendí" se completa al terminar el módulo.'}
+Aclara que en esta sección no hay respuestas incorrectas. Formato: HTML con <h3> por actividad. Máx. 280 palabras.`,
+
+    s4: (k, f) => `Genera SOLO el contenido de la Sección 4 "C. Comprendo la información" (evaluación formativa; sin el título de la sección).
+Incluye ${pequeno(k) ? '3' : '3 o 4'} actividades numeradas (<h3>Actividad 1: …</h3>), una por cada CONTENIDO PROCEDIMENTAL del plan cuando sea posible, usando SOLO el texto, el organizador y el vocabulario de la Sección 3. Tipos adecuados: ${nivel(k).actividades}.
+${perfilAsig(f.asignatura).nom === 'Ciencias' ? 'Una de ellas es la ACTIVIDAD PRÁCTICA (🧪 experimento casero seguro u observación del entorno) con: ¿Qué necesitas?, Procedimiento (pasos numerados), Tabla de registro y 2 o 3 Preguntas de conclusión.' : 'Una de ellas es un TRABAJO PRÁCTICO del plan (p. ej. mapa, tabla, organizador, ejercicios resueltos, entrevista a un familiar) con pasos numerados.'}
+Termina con <h3>✅ Me autocompruebo</h3>: 3 a 5 preguntas cortas de respuesta única para verificar lo aprendido (las respuestas van en la Sección 7).
+Para cada actividad: título, entre paréntesis el logro de la Sección 1 que trabaja, instrucción clara, los ítems con su contenido exacto y el ejemplo resuelto del primero. Deja líneas ________ o celdas vacías para responder.
+NO pongas las respuestas. Formato: HTML con <h3> por actividad, <ol> para ítems y <table> para cuadros. Máx. 750 palabras.`,
+
+    s5: (k, f) => {
+      const n = nivel(k);
+      if (!n.prueba) return `Genera SOLO el contenido de la Sección 5 (sin el título de la sección). Incluye:
+1. <h3>D. Aplico lo aprendido</h3>: una situación de la vida diaria del niño, contada por el adulto, y 1 o 2 preguntas para conversar o dibujar.
+2. <h3>🎨 Mi producto</h3>: el entregable del plan adaptado al preescolar (algo concreto y manipulable: dibujo, collage, títere, maqueta sencilla). Pasos numerados (máx. 4) dirigidos al adulto y lo que el niño dirá al presentarlo.
+3. <h3>📋 Lista de cotejo</h3>: ${n.evaluacion} Tabla con columnas "El niño o la niña…" | LHL | LEL | LVL. Debajo: "LHL = Lo he logrado · LEL = Lo estoy logrando · LVL = Lo voy a lograr" y una línea de Observaciones.
+4. NOTA DE CORTESÍA (en <p>): devolver el módulo a tiempo y en buen estado; aclara que NO afecta la evaluación.`;
+      return `Genera SOLO el contenido de la Sección 5 (sin el título de la sección). Incluye, en este orden:
+1. <h3>D. Aplico mis conocimientos</h3>: un caso o situación NUEVA de la comunidad o de Panamá (no repitas el texto de la Sección 3) con 2 o 3 preguntas de análisis.
+2. <h3>🏆 Mi producto</h3>: el ENTREGABLE del plan (p. ej. organizador gráfico, afiche, mapa) adaptado para hacerlo en casa con materiales sencillos: qué debe contener (lista) y pasos (máx. 5). Nómbralo con un título claro.
+3. <h3>📝 Evaluación sumativa</h3>: ${n.evaluacion.split(/,? y RÚBRICA/)[0]}. Si el plan trae una prueba escrita, úsala como base (solo los ítems que corresponden al tema). Cada ítem muestra su puntaje entre paréntesis y al final indica el TOTAL de puntos. En selección múltiple, 4 opciones A) B) C) D) con una sola correcta.
+4. <h3>📊 Rúbrica del producto</h3>: RÚBRICA ANALÍTICA en tabla con columnas Criterio | ${ESCALA.split(' | ').join(' | ')}. ${pequeno(k) ? '3' : '3 a 4'} criterios tomados de los criterios e instrumentos del plan, cada uno ligado a un logro de la Sección 1. Descriptores observables. PROHIBIDO usar puntualidad, orden, limpieza o conducta como criterios de nota.
+5. <p>Nota: la calificación de la prueba se obtiene con: Nota = 1 + (puntos obtenidos × 4 ÷ puntos totales).</p>
+6. NOTA DE CORTESÍA (en <p>): devolver el módulo a tiempo y en buen estado; aclara que NO afecta la calificación.
+NO pongas las respuestas de la prueba (van en la Sección 7). Formato: HTML con <ol> para los ítems y <table> para la rúbrica.`;
+    },
+
+    s6: (k, f) => {
+      const e = nivel(k).escalaAuto;
+      return `Genera SOLO la parte variable de la Sección 6 "Autoevaluación". La escala (${e[1]} / ${e[3]} / ${e[5]}) YA está impresa: NO la repitas ni la describas.
+Incluye:
+1. ${pequeno(k) ? 'Instrucción "Adulto: lea cada frase; el niño colorea o marca la carita."' : 'Instrucción breve: "Marca con un gancho (✓) la columna que mejor describe tu aprendizaje."'}
+2. <table> con los LOGROS de la Sección 1 (uno por fila, mismas palabras) y columnas: Criterio | ${e[0]} ${e[1]} | ${e[2]} ${e[3]} | ${e[4]} ${e[5]} (celdas con ☐).
+3. <h4>🤔 Pienso en mi aprendizaje</h4>: ${k === 'preescolar' ? '"¿Qué te gustó más? Dibújalo."' : '¿Qué aprendí? · ¿Cómo lo aprendí? · ¿Para qué me sirve en mi comunidad? (con líneas para responder). Recuerda completar la columna "Lo que aprendí" de la Sección 2.'}
+4. <h4>👨‍👩‍👧 Opinión de la familia</h4> (coevaluación): tabla de 3 frases que el adulto marca Sí / No (p. ej. "Me explicó con sus palabras lo que aprendió."). Aclara que no es parte de la nota.
+Formato: HTML simple. Máx. 220 palabras.`;
+    },
+
+    s7: (k, f) => `Genera SOLO el contenido de la Sección 7 (sin el título de la sección). Incluye:
+1. <h3>🔑 Clave de respuestas (para el adulto)</h3>: las respuestas de los ítems con respuesta única de la Sección 4 (actividades y "Me autocompruebo") y de la evaluación sumativa de la Sección 5 (usa el contenido que se te da abajo; numeración igual). Para respuestas abiertas, da una respuesta modelo y qué debe contener. ${perfilAsig(f.asignatura).nom === 'Matemática' ? 'Incluye el procedimiento de cada ejercicio.' : ''}
+2. <h3>📝 Glosario</h3>: tabla Término | Significado con los términos del vocabulario de la Sección 3 (mismas definiciones).
+3. <h3>👨‍👩‍👧 Nota para la familia</h3>: 4 a 5 viñetas prácticas (sesiones cortas, leer juntos, dejar que intente antes de ayudar, revisar con la clave después, qué entregar al docente: nombra el producto EXACTAMENTE como en la Sección 5).
+4. <h3>📚 Fuentes</h3>: 2 a 4 referencias REALES y generales que el docente pueda verificar (p. ej. las guías del estudiante de MEDUCA del grado, el programa de la asignatura, instituciones como MiAmbiente o el Instituto Smithsonian de Investigaciones Tropicales). NO inventes autores, años ni enlaces.
+Formato: HTML simple.`,
+
+    s8: (k, f, qty, tipos) => `Genera SOLO el contenido de la Sección 8 "Amplía tus conocimientos" (opcional; sin el título de la sección).
+Incluye exactamente ${qty} actividades:
+- La PRIMERA es de 🔁 REFUERZO, para quien tuvo dificultad: repasa la idea principal del tema con apoyo (organizador semillenado, ejemplo resuelto, preguntas guiadas). Si el plan trae "Diferenciación", úsala.
+- Las demás son de ⭐ AMPLIACIÓN, de estos tipos: ${tipos}.
+Cada actividad: <h3> con ícono y título, el logro de la Sección 1 entre paréntesis, instrucción motivadora y 3 pasos o ítems concretos. Nada obligatorio requiere internet; si sugieres un enlace o video, márcalo como opcional y no inventes direcciones web.
+Formato: HTML con <h3> por actividad y <ol> para pasos.`,
+  };
+
+  /* ---------- Partes fijas que pone la app ---------- */
+  function datosGenerales(f, k) {
+    const filas = [['Área', f.area || '—'], ['Asignatura', f.asignatura], ['Grado', `${gradoLbl(f.grado)} · ${f.nivel}`], ['Trimestre', `${f.trimestre} · ${f.anio}`],
+      ['Tiempo estimado', nivel(k).minutos], ['Semana', 'del ______ al ______ de ______________']];
+    if (f.objetivo) filas.splice(2, 0, ['Objetivo de aprendizaje', f.objetivo]);
+    return `<h4>🏫 Datos generales</h4><table>${filas.map(r => `<tr><th>${r[0]}</th><td>${r[1]}</td></tr>`).join('')}</table>`;
+  }
+  function cronograma(k) {
+    const filas = [['Día 1', 'Secciones 1 y 2', 'Leo la presentación y exploro lo que ya sé.'], ['Día 2', 'Sección 3', 'Leo la información, el organizador y el vocabulario.'],
+      ['Día 3', 'Sección 4', 'Hago las actividades y la actividad práctica.'], ['Día 4', 'Sección 5', 'Aplico lo aprendido y preparo mi producto.'],
+      ['Día 5', 'Secciones 5 y 6', 'Evaluación, autoevaluación y entrego mi producto.']];
+    return `<h4>📅 Cronograma</h4><table><tr><th>Día</th><th>Sección</th><th>¿Qué haré?</th><th>Fecha</th></tr>${filas.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td></td></tr>`).join('')}</table>`;
+  }
+  function iconos(k) {
+    const lista = [['👨‍👩‍👧', 'Trabajo con la familia', ''], ['⏱️', 'Tiempo de la actividad', ''], ['💡', '¿Sabías que…?', 'dato curioso'], ['❓', 'Preguntas', 'para pensar y responder'],
+      [pequeno(k) ? '🖍️' : '🧪', pequeno(k) ? 'Colorea' : 'Actividad práctica', pequeno(k) ? 'o dibuja' : 'experimenta u observa'], ['🪞', 'Autoevaluación', '']];
+    return lista.map(([i, a, b]) => `<div class="icon-item"><span class="ico">${i}</span> <strong>${a}</strong> ${b}</div>`).join('');
+  }
+
+  /* ---------- Detección y extracción del plan ---------- */
+  function detectarTipo(text) {
+    const t = String(text || '');
+    const ini = t.slice(0, 4000);
+    const m = /ASIGNATURA\s*:?\s*([^\n|]{2,60})/i.exec(ini);
+    if (m) return /ingl|english/i.test(m[1]) ? 'ingles' : 'espanol';
+    if (/scenario|\btheme\b|english|ingl[eé]s|listening|speaking/i.test(ini)) return 'ingles';
+    if (/secuencia did[aá]ctica|contenidos?\s*:?\s*conceptual|procedimental|actitudinal/i.test(t)) return 'espanol';
+    return 'ingles';
+  }
+
+  async function extraer(text) {
+    const t = String(text || '').replace(/[ \t]+/g, ' ').replace(/\n\s*\n+/g, '\n');
+    const corte = t.search(/PLANES DIARIOS|PLAN DIARIO|D[IÍ]A\s*1\s*[—–-]/i);
+    const general = (corte > 500 ? t.slice(0, corte) : t).slice(0, 14000);
+    const diario = corte > 500 ? t.slice(corte, corte + 26000) : (t.length > 14000 ? t.slice(14000, 40000) : '');
+    const p1 = `Eres un asistente experto en planeamientos de MEDUCA Panamá (formato "Secuencia didáctica" de asignaturas en español).
+Extrae los datos del plan en JSON estricto. Responde ÚNICAMENTE con el JSON, sin explicaciones ni markdown.
+
+JSON esperado:
+{"asignatura":"","grado":"","nivel":"Preescolar|Primaria|Premedia|Media","trimestre":"I Trimestre|II Trimestre|III Trimestre","tema":"","docente":"","area":"","objetivo":"","conceptual":"","procedimental":"","actitudinal":"","indicadores":[""],"indicadoresOmitidos":[""],"actividades":"","evaluacion":""}
+
+Reglas:
+- objetivo: el objetivo de aprendizaje del plan; si abarca varios temas del trimestre, conserva solo la parte que corresponde a este tema.
+- tema: el contenido conceptual principal (p. ej. "Biodiversidad: ecosistemas de Panamá y corredor biológico").
+- indicadores: SOLO los indicadores de logro académicos que se relacionan con el tema y los contenidos de ESTE plan. Los que pertenecen a otros temas (p. ej. del trimestre completo) van en indicadoresOmitidos. Excluye puntualidad, orden y limpieza.
+- procedimental y actitudinal: cada contenido separado por " · ".
+- actividades: resumen de inicio, desarrollo y cierre (máx. 80 palabras).
+- evaluacion: evidencias o entregables, criterios, tipos de evaluación e instrumentos; si hay rúbrica, sus criterios y niveles; si hay prueba escrita, sus ítems con puntaje (máx. 150 palabras).
+- Si no encuentras un campo, déjalo vacío.
+
+TEXTO DEL PLAN:
+${general}`;
+    let d = {};
+    try { d = JSON.parse((await callAI(p1, 1600)).replace(/```json|```/g, '').trim()); } catch (e) { console.warn('GEMA_ES: JSON no válido', e); }
+    d.contenidos = [d.conceptual && `Conceptual: ${d.conceptual}`, d.procedimental && `Procedimental: ${d.procedimental}`, d.actitudinal && `Actitudinal: ${d.actitudinal}`].filter(Boolean).join('\n') || d.contenidos || '';
+    d.insumos = '';
+    if (diario.trim().length > 400) {
+      setProcessingMsg('Leyendo los planes diarios…', 'Rescatando lecturas, datos, actividades y prueba escrita');
+      const p2 = `Del siguiente texto (planes diarios de un planeamiento de MEDUCA Panamá) extrae los INSUMOS útiles para escribir un módulo de autoinstrucción. Responde en texto plano con viñetas, máximo 650 palabras, en estas partes:
+LECTURAS Y DATOS: títulos de las lecturas y sus ideas, datos, lugares, especies, ejemplos locales y nombres propios mencionados.
+ACTIVIDADES PRÁCTICAS: trabajos prácticos, organizadores, mapas, experimentos y productos.
+DIFERENCIACIÓN: apoyos para quien tiene dificultad y retos para los avanzados.
+TAREAS PARA CASA.
+PRUEBA ESCRITA: ítems con su puntaje (copia los que existan).
+No inventes nada que no esté en el texto.
+
+TEXTO:
+${diario}`;
+      try { d.insumos = (await callAI(p2, 1400)).trim(); } catch (e) { console.warn('GEMA_ES: sin insumos', e); }
+    }
+    d.tipo = 'espanol';
+    return d;
+  }
+
+  function llenarExtra(d) {
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+    set('f_area', d.area); set('f_objetivo', d.objetivo); set('f_evaluacion', d.evaluacion); set('f_insumos', d.insumos);
+    const om = (d.indicadoresOmitidos || []).filter(x => x && x.trim());
+    const box = document.getElementById('esOmitidos');
+    if (box) box.innerHTML = om.length ? `<div class="alert alert-warn"><span class="alert-icon">⚠️</span><div><strong>Indicadores que no corresponden a este tema</strong> (no se usarán; agrégalos abajo si los necesitas): ${om.join(' · ')}</div></div>` : '';
+  }
+
+  /* ---------- Interfaz ---------- */
+  let extOriginal = null, estructuraOriginal = null, pasosOriginal = null;
+  function syncUI() {
+    const es = state.tipo === 'espanol';
+    document.querySelectorAll('#tipoGrid .option-card').forEach(c => c.classList.toggle('selected', c.dataset.val === state.tipo));
+    const extra = document.getElementById('esExtraCard'); if (extra) extra.style.display = es ? '' : 'none';
+    const idi = document.getElementById('idiomaCard'); if (idi) idi.style.display = es ? 'none' : '';
+    if (es && state.idioma !== 'es') { const c = document.querySelector('#idiomaGrid .option-card[data-val="es"]'); if (c) selectIdioma(c, 'es'); }
+    const ej = document.querySelector('.ext-type-card[onclick*="ejercicios"]');
+    if (ej) { if (extOriginal === null) extOriginal = ej.textContent; ej.textContent = es ? '✍️ Ejercicios de práctica' : extOriginal; }
+    const est = document.getElementById('estructuraLista');
+    if (est) {
+      if (estructuraOriginal === null) estructuraOriginal = est.innerHTML;
+      est.innerHTML = es ? ['Portada institucional', 'Sección 1 — Presentación (datos generales, logros, situación de aprendizaje, cronograma e íconos)', 'Sección 2 — A. Exploro (saberes previos)', 'Sección 3 — B. Conozco el tema (lectura, organizador, vocabulario)', 'Sección 4 — C. Comprendo la información (actividades y actividad práctica)', 'Sección 5 — D. Aplico mis conocimientos (producto, prueba y rúbrica)', 'Sección 6 — Autoevaluación', 'Sección 7 — Clave de respuestas, glosario y fuentes']
+        .map((s, i) => `✅ ${i === 0 ? 'Sección 0 — ' : ''}${s}`).join('<br>') : estructuraOriginal;
+    }
+  }
+  function selectTipo(card, val) { state.tipo = val; syncUI(); }
+  function autoTipo() {
+    if (state.tipo) return;
+    const a = (document.getElementById('f_asignatura') || {}).value || '';
+    state.tipo = a.trim() && !/ingl|english/i.test(a) ? 'espanol' : 'ingles';
+  }
+  const PASOS_ES = ['Portada institucional', 'Presentación del módulo', 'A. Exploro', 'B. Conozco el tema', 'C. Comprendo la información', 'D. Aplico — Evaluación', 'Autoevaluación', 'Clave, glosario y fuentes'];
+  function pasos(es) {
+    if (!es && !pasosOriginal) return;
+    for (let i = 0; i < 8; i++) {
+      const el = document.getElementById('gs' + i); if (!el) continue;
+      if (!pasosOriginal) pasosOriginal = [];
+      if (pasosOriginal[i] === undefined) pasosOriginal[i] = el.lastChild.textContent;
+      el.lastChild.textContent = ' ' + (es ? PASOS_ES[i] : pasosOriginal[i].trim());
+      el.classList.remove('done', 'active'); el.querySelector('.proc-step-icon').textContent = '⏳';
+    }
+  }
+
+  /* ---------- Generación ---------- */
+  async function generar(f) {
+    pasos(true);
+    const k = GEMA_NIVELES.clave(f.grado, f.nivelVisual, f.nivel);
+    const n = nivel(k);
+    const casa = f.uso === 'completo' || f.uso === 'pre-invertida';
+    const modalidad = { completo: 'Autoinstrucción completa (todo en casa, sin docente presente)', 'pre-invertida': 'Aula pre-invertida (Secciones 1-3 en casa, Secciones 4-5 en el aula con el docente)', 'semi-invertida': 'Aula semi-invertida (Secciones 1-2 en casa, Secciones 3-5 en el aula con el docente)', refuerzo: 'Refuerzo en aula (todo con el docente presente)' }[f.uso];
+    const base = `
+IMPORTANTE: Genera TODO el contenido en ESPAÑOL. Es un módulo de autoinstrucción de una asignatura en español, con el formato de las guías del estudiante de MEDUCA.
+
+Datos del módulo:
+- Escuela: ${f.escuela}, Región: ${f.region}
+- Docente: ${f.docente}, Año: ${f.anio}
+- Asignatura: ${f.asignatura}${f.area ? ` · Área: ${f.area}` : ''}
+- Grado: ${gradoLbl(f.grado)}, Nivel: ${f.nivel}, Trimestre: ${f.trimestre}
+- Tema: ${f.tema}
+${f.objetivo ? `- Objetivo de aprendizaje: ${f.objetivo}\n` : ''}- Contenidos:
+${f.contenidos}
+- Indicadores de logro:
+${f.indicadores.map((x, i) => `${i + 1}. ${x}`).join('\n')}
+- Actividades del plan: ${f.actividades}
+${f.evaluacion ? `- Evaluación del plan (evidencias, criterios, instrumentos): ${f.evaluacion}\n` : ''}${f.insumos ? `- INSUMOS DE LOS PLANES DIARIOS (úsalos: son el contenido real que preparó el docente):\n"""\n${f.insumos.slice(0, 4500)}\n"""\n` : ''}${f.previa ? `- LECCIÓN ANTERIOR (no repitas su texto, ejemplos ni actividades):\n${f.previa}\n` : ''}- Modalidad de uso: ${modalidad}
+- ${casa ? 'Se trabaja EN CASA sin docente: instrucciones paso a paso y ejemplos resueltos para que un adulto sin formación docente pueda acompañar.' : 'Parte se trabaja EN EL AULA con el docente: puede incluir trabajo en parejas en las secciones de aula.'}
+
+${bloque(k, f)}
+`;
+    const FMT = 'Responde SOLO el HTML de contenido. SIN estilos inline. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.';
+    const S = {};
+    const ctx = (nom, s, max) => S[s] ? `\n${nom}:\n"""\n${gemaTexto(S[s]).slice(0, max)}\n"""\n` : '';
+    const ctxLog = () => S.s1 ? `\nLOGROS DE LA SECCIÓN 1 (cítalos igual):\n"""\n${gemaTexto(S.s1.split(/<h4[^>]*>[^<]*Habilidades/i)[0]).slice(0, 900)}\n"""\n` : '';
+    const ctx3 = () => ctxLog() + ctx('CONTENIDO DE LA SECCIÓN 3 (usa EXACTAMENTE estos conceptos, datos y términos)', 's3', 5000);
+    const llamar = async (txt, max) => cleanHTML(await callAI(`${base}${txt}\n${FMT}`, max));
+
+    setGenStep(0, 'done');
+    setGenStep(3, 'active'); S.s3 = await llamar(spec.s3(k, f), 4500); setGenStep(3, 'done');
+    setGenStep(1, 'active');
+    S.s1 = await llamar(ctx('CONTENIDO DE LA SECCIÓN 3', 's3', 3000) + spec.s1(k, f), 1800);
+    const mAv = /<p[^>]*class="gema-aviso"[^>]*>([\s\S]*?)<\/p>/i.exec(S.s1);
+    state.avisoInd = mAv ? mAv[1].replace(/<[^>]+>/g, '') : '';
+    if (mAv) S.s1 = S.s1.replace(mAv[0], '');
+    setGenStep(1, 'done');
+    setGenStep(2, 'active'); S.s2 = await llamar(ctx3() + spec.s2(k, f), 1800); setGenStep(2, 'done');
+    setGenStep(4, 'active'); S.s4 = await llamar(ctx3() + spec.s4(k, f), 4500); setGenStep(4, 'done');
+    setGenStep(5, 'active'); S.s5 = await llamar(ctx3() + ctx('ACTIVIDADES DE LA SECCIÓN 4 (no las repitas)', 's4', 2500) + spec.s5(k, f), 4500); setGenStep(5, 'done');
+    setGenStep(6, 'active'); S.s6 = await llamar(ctxLog() + ctx('PRODUCTO Y EVALUACIÓN DE LA SECCIÓN 5', 's5', 1200) + spec.s6(k, f), 1500); setGenStep(6, 'done');
+    setGenStep(7, 'active');
+    S.s7 = await llamar(ctx('CONTENIDO DE LA SECCIÓN 3', 's3', 3500) + ctx('CONTENIDO DE LA SECCIÓN 4 (para la clave)', 's4', 4500) + ctx('CONTENIDO DE LA SECCIÓN 5 (para la clave)', 's5', 4500) + spec.s7(k, f), 3500);
+    setGenStep(7, 'done');
+    if (f.extQty > 0 && f.extTypes.length > 0) {
+      const mapa = { ejercicios: 'ejercicios de práctica más retadores que la Sección 4', creativos: 'actividades creativas (dibujar, diseñar, construir con material reciclado)', mapa: 'mapa mental o conceptual', proyecto: 'proyecto o investigación en la comunidad (entrevista, observación, registro)', roleplay: 'dramatización o exposición a la familia', reto: 'reto o problema que exige pensamiento crítico' };
+      S.s8 = await llamar(ctx3() + spec.s8(k, f, f.extQty, f.extTypes.map(t => mapa[t] || t).join('; ')), f.extQty <= 2 ? 1800 : f.extQty <= 4 ? 3000 : 4000);
+    }
+    state.generatedSections = S;
+    try { localStorage.setItem('gema_ultimo', `${f.tema} (${gradoLbl(f.grado)}): ` + gemaTexto(S.s3 || '').replace(/\s+/g, ' ').slice(0, 700)); } catch (_) {}
+    updateProgress(98);
+    goTo(5);
+    void document.getElementById('screen5').offsetHeight;
+    renderModule(S);
+    updateProgress(100);
+  }
+
+  /* ---------- Vista del módulo ---------- */
+  function renderHTML(S, f) {
+    const k = GEMA_NIVELES.clave(f.grado, f.nivelVisual, f.nivel);
+    const n = nivel(k), e = n.escalaAuto;
+    const casa = s => {
+      const enCasa = { completo: [2, 3, 4, 5], 'pre-invertida': [2, 3], 'semi-invertida': [2], refuerzo: [] }[f.uso || 'completo'];
+      return enCasa.includes(s) ? '<span class="uso-badge home">🏠 Para hacer en casa</span>' : '<span class="uso-badge class">🏫 Para hacer en el aula</span>';
+    };
+    const sec = (num, titulo, cuerpo, badge) => `
+    <div class="mod-section">
+      <div class="mod-section-label">Sección ${num}${badge ? ' ' + badge : ''}</div>
+      <div class="mod-section-title">${titulo}</div>
+      <div class="mod-content">${cuerpo || '<p>Contenido no disponible.</p>'}</div>
+    </div>`;
+    return `
+    <div class="mod-cover">
+      <div class="mod-cover-logo">MEDUCA Panamá · ${f.region} · ${f.escuela}</div>
+      <div class="mod-cover-title">📘 ${f.tema}</div>
+      <div class="mod-cover-sub">Módulo de Autoinstrucción</div>
+      <div class="mod-cover-chips">
+        <span class="mod-cover-chip">📚 ${f.asignatura}</span>
+        <span class="mod-cover-chip">🎓 ${gradoLbl(f.grado)} · ${f.nivel}</span>
+        <span class="mod-cover-chip">📅 ${f.trimestre} · ${f.anio}</span>
+        <span class="mod-cover-chip">👩‍🏫 ${f.docente}</span>
+        <span class="mod-cover-chip">${{ completo: '🏠 Autoinstrucción', 'pre-invertida': '🔀 Pre-invertida', 'semi-invertida': '⚡ Semi-invertida', refuerzo: '🏫 Refuerzo' }[f.uso || 'completo']}</span>
+      </div>
+    </div>
+    ${sec(1, '📋 Presentación del módulo', `${datosGenerales(f, k)}${S.s1 || ''}${cronograma(k)}
+        <h4>🗺️ Íconos de este módulo</h4>
+        <div class="icon-guide">${iconos(k)}</div>
+        <p class="mod-animo">💚 <strong>${pequeno(k) ? 'Para la familia:' : '¡Bienvenido a esta aventura!'}</strong> ${pequeno(k) ? 'usted lee las instrucciones y acompaña. Trabajen un día a la vez y celebren cada logro.' : 'Puedes usar este módulo o tu cuaderno para responder. Lee con calma, intenta primero por tu cuenta y pide ayuda a tu familia cuando la necesites.'}</p>`)}
+    ${sec(2, '🔎 A. Exploro — ¿Qué sé?', S.s2, casa(2))}
+    ${sec(3, '📚 B. Conozco el tema', S.s3, casa(3))}
+    ${sec(4, '🧪 C. Comprendo la información', S.s4, casa(4))}
+    ${sec(5, '🏆 D. Aplico mis conocimientos — Evaluación', S.s5, casa(5))}
+    ${sec(6, '🪞 Autoevaluación', `<div class="self-assess">
+          <div class="sa-card green"><div class="sa-icon">${e[0]}</div><div class="sa-label">${e[1]}</div><div class="sa-desc">${n.descAuto[0]}</div></div>
+          <div class="sa-card yellow"><div class="sa-icon">${e[2]}</div><div class="sa-label">${e[3]}</div><div class="sa-desc">${n.descAuto[1]}</div></div>
+          <div class="sa-card red"><div class="sa-icon">${e[4]}</div><div class="sa-label">${e[5]}</div><div class="sa-desc">${n.descAuto[2]}</div></div>
+        </div>${S.s6 || ''}`)}
+    ${sec(7, '🔑 Clave de respuestas, glosario y fuentes', S.s7)}
+    ${S.s8 ? `
+    <div class="mod-section" style="border-top:2px dashed #4f46e5;margin-top:8px;">
+      <div class="mod-section-label" style="color:#4f46e5;">Sección 8 · Opcional</div>
+      <div class="mod-section-title">🚀 Amplía tus conocimientos</div>
+      <div class="mod-content">${S.s8}</div>
+    </div>` : ''}`;
+  }
+
+  return { NIVEL, perfilAsig, bloque, spec, detectarTipo, extraer, llenarExtra, syncUI, selectTipo, autoTipo, pasos, generar, renderHTML };
+})();
+
+</script>
+<script>
 if(typeof pdfjsLib!=='undefined'){
   pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
@@ -764,7 +1276,7 @@ if(typeof pdfjsLib!=='undefined'){
 const state={
   api:'groq',apiKey:'',
   fileName:'',fileSize:'',extractedText:'',
-  nivel:'1-3',idioma:'es',formatos:['pdf','word','html'],uso:'completo',extQty:0,extTypes:['ejercicios','creativos'],
+  nivel:'1-3',idioma:'es',formatos:['pdf','word','html'],uso:'completo',tipo:'',extQty:0,extTypes:['ejercicios','creativos'],
   fields:{},generatedSections:{}
 };
 
@@ -820,10 +1332,12 @@ async function handleFile(file){
     if(!text || text.trim().length<20) throw new Error('No se pudo extraer texto suficiente del documento.');
     state.extractedText=text;updateProgress(40);
     setProcessingMsg('Analizando con IA...','Extrayendo estructura del plan de clase');
-    const extracted=await extractWithAI(text);
+    state.tipo=GEMA_ES.detectarTipo(text);
+    const extracted=state.tipo==='espanol'?await GEMA_ES.extraer(text):await extractWithAI(text);
     updateProgress(90);
     setProcessingMsg('¡Listo!','Preparando datos para revisión');
     fillForm(extracted);
+    GEMA_ES.llenarExtra(state.tipo==='espanol'?extracted:{});
     setTimeout(()=>{goTo(2);},600);
   }catch(err){
     console.error(err);
@@ -962,6 +1476,11 @@ function getIndicadores(){
   return Array.from(document.querySelectorAll('#indicadoresList input')).map(i=>i.value.trim()).filter(Boolean);
 }
 
+function usarUltimoModulo(){
+  let u='';try{u=localStorage.getItem('gema_ultimo')||'';}catch(_){}
+  if(!u){showToast('Todavía no hay un módulo generado en este dispositivo');return;}
+  document.getElementById('f_previa').value=u;showToast('✅ Lección anterior cargada');
+}
 function selectUso(card,val){
   document.querySelectorAll('#usoGrid .uso-card').forEach(c=>c.classList.remove('selected'));
   card.classList.add('selected');
@@ -988,6 +1507,7 @@ function buildSummary(){
     ['Escuela',document.getElementById('f_escuela').value],
     ['Docente',document.getElementById('f_docente').value],
     ['Asignatura',document.getElementById('f_asignatura').value],
+    ['Tipo de módulo',state.tipo==='espanol'?'📗 Asignatura en español (formato guías MEDUCA)':'🇺🇸 Inglés (AOA)'],
     ['Grado',document.getElementById('f_grado').value],
     ['Nivel',document.getElementById('f_nivel').value],
     ['Trimestre',document.getElementById('f_trimestre').value],
@@ -999,6 +1519,8 @@ function buildSummary(){
     ['Exportar como',state.formatos.map(f=>`<span class="fmt-tag">${fmtIcons[f]}</span>`).join('')||'<em>Ninguno</em>'],
     ['Modalidad',{'completo':'🏠 Autoinstrucción completa','pre-invertida':'🔀 Aula pre-invertida','semi-invertida':'⚡ Aula semi-invertida','refuerzo':'🏫 Refuerzo en aula'}[state.uso]]
   ];
+  const prev=(document.getElementById('f_previa')||{}).value||'';
+  rows.push(['Lección anterior',prev?prev.slice(0,120)+(prev.length>120?'…':''):'—']);
   rows.push(['Sección 8',state.extQty>0?`${state.extQty} actividades (${state.extTypes.join(', ')})`:'Sin actividades de extensión']);
   document.getElementById('summaryTable').innerHTML=rows.map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('');
 }
@@ -1020,6 +1542,8 @@ async function startGeneration(){
     contenidos:document.getElementById('f_contenidos').value,
     indicadores:getIndicadores(),
     actividades:document.getElementById('f_actividades').value,
+    previa:(document.getElementById('f_previa')||{}).value||'',
+    tipo:state.tipo||'ingles',area:(document.getElementById('f_area')||{}).value||'',objetivo:(document.getElementById('f_objetivo')||{}).value||'',evaluacion:(document.getElementById('f_evaluacion')||{}).value||'',insumos:(document.getElementById('f_insumos')||{}).value||'',
     nivelVisual:state.nivel,idioma:state.idioma,formatos:[...state.formatos],uso:state.uso,extQty:state.extQty,extTypes:[...state.extTypes]
   };
   showOnly('screenGenerating');updateProgress(50);
@@ -1040,20 +1564,13 @@ function setGenStep(idx,status){
 
 async function generateModule(){
   const f=state.fields;
+  if(f.tipo==='espanol')return GEMA_ES.generar(f);
+  GEMA_ES.pasos(false);
   const idiomaTxt={es:'español',en:'inglés',bi:'español para instrucciones e inglés para el contenido académico'}[f.idioma];
   const idiomaDirectiva={
     es:'IMPORTANTE: Genera TODO el contenido en ESPAÑOL — instrucciones, explicaciones, encabezados, notas para el tutor, todo en español.',
-    en:`⚠️⚠️⚠️ CRITICAL LANGUAGE RULE — READ CAREFULLY ⚠️⚠️⚠️
-The instructions below are written in Spanish, but they are ONLY meta-instructions telling YOU (the AI) what structure to generate. They are NOT a model for what language to write in.
-YOUR ENTIRE OUTPUT must be 100% in ENGLISH. This includes:
-- Activity titles and headings (write "Listen and Do" NOT "Escucha y Haz")
-- Instructions to the student or tutor (write "Listen to your tutor read 3 sentences" NOT "Escucha a tu tutor leer 3 oraciones")
-- Notes, tips, and connections to indicators (write "This connects to Indicator 1" NOT "Esta actividad conecta con el Indicador 1")
-- Comprehension questions, answers, and feedback
-- Every single word except proper nouns or the word "MEDUCA"
-The ONLY exception: in vocabulary tables, you may add a short Spanish translation in its own column, clearly separated — but never blend Spanish into sentences, instructions, or explanations.
-If you write any instructional sentence in Spanish, you have FAILED this task. Re-read every sentence before responding and confirm it is in English.`,
-    bi:'IMPORTANTE: Genera las INSTRUCCIONES, explicaciones y notas para el tutor en ESPAÑOL, pero el CONTENIDO ACADÉMICO (vocabulario, textos de lectura, oraciones modelo, ejercicios) en INGLÉS. No mezcles: cada parte debe estar completamente en su idioma correspondiente.'
+    en:'IMPORTANTE (módulo en inglés): el CONTENIDO para el estudiante (vocabulario, frases, textos, canciones, ejercicios y sus consignas cortas) va en INGLÉS. Todo lo que lee el ADULTO (instrucciones "Adulto:", Nota para la familia, rúbrica, nota de cortesía, respuestas) va en ESPAÑOL, porque la familia puede no hablar inglés.',
+    bi:'IMPORTANTE (módulo bilingüe): Genera las INSTRUCCIONES, explicaciones y notas para el tutor en ESPAÑOL, pero el CONTENIDO ACADÉMICO (vocabulario, textos de lectura, oraciones modelo, ejercicios) en INGLÉS. No mezcles: cada parte debe estar completamente en su idioma correspondiente.'
   }[f.idioma];
   const nk=GEMA_NIVELES.clave(f.grado,f.nivelVisual,f.nivel);
   const nivelTxt={'pk':'preescolar (Pre-K/Kinder): no lee ni escribe; todo mediado por un adulto','1-3':'primaria baja (1°-3°): usa lenguaje muy simple, muchos ejemplos visuales descritos, actividades concretas','4-6':'primaria alta (4°-6°): balance entre texto e imagen, gramática básica, producción escrita','secundaria':'secundaria: lenguaje académico, análisis, terminología formal'}[f.nivelVisual];
@@ -1071,14 +1588,16 @@ Datos del módulo:
 - Indicadores de logro:
 ${indsStr}
 - Actividades del plan: ${f.actividades}
-- Nivel de complejidad: ${nivelTxt}
+${f.previa?`- LECCIÓN ANTERIOR (NO repitas su cuento, personajes, contexto ni actividades; usa otro escenario y otro texto de lectura aunque el vocabulario se parezca):\n${f.previa}\n`:''}- Nivel de complejidad: ${nivelTxt}
 - Idioma: ${idiomaTxt}
 - Modalidad de uso: ${{'completo':'Autoinstrucción completa (todo en casa, sin docente presente)','pre-invertida':'Aula pre-invertida (Secciones 1-3 en casa, Secciones 4-5 en el aula con el docente)','semi-invertida':'Aula semi-invertida (Sección 1-2 en casa, Secciones 3-5 en el aula con el docente)','refuerzo':'Refuerzo en aula (todo con el docente presente)'}[f.uso]}
 
-${GEMA_NIVELES.bloquePrompt(nk)}
+${GEMA_NIVELES.bloquePrompt(nk,f.idioma)}
 `;
   const FMT='Responde SOLO el HTML de contenido. SIN estilos inline. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.';
-  const ctxS3=()=>sections.s3?`\nCONTENIDO YA GENERADO EN LA SECCIÓN 3 (usa EXACTAMENTE este vocabulario, estas frases y este texto; no agregues palabras nuevas):\n"""\n${gemaTexto(sections.s3).slice(0,4500)}\n"""\n`:'';
+  const ctxS1=()=>sections.s1?`\nFRASES YO PUEDO DE LA SECCIÓN 1 (úsalas para citar qué practica cada actividad):\n"""\n${gemaTexto(sections.s1.split(/Para la familia|For the Family/i)[0]).slice(0,1200)}\n"""\n`:'';
+  const ctxS5=()=>sections.s5?`\nPRODUCTO FINAL DE LA SECCIÓN 5 (nómbralo igual):\n"""\n${gemaTexto(sections.s5).slice(0,1000)}\n"""\n`:'';
+  const ctxS3=()=>ctxS1()+(sections.s3?`\nCONTENIDO YA GENERADO EN LA SECCIÓN 3 (usa EXACTAMENTE este vocabulario, estas frases y este texto; no agregues palabras nuevas):\n"""\n${gemaTexto(sections.s3).slice(0,4500)}\n"""\n`:'');
   const ctxS4=()=>sections.s4?`\nCONTENIDO DE LA SECCIÓN 4 (para la clave de respuestas):\n"""\n${gemaTexto(sections.s4).slice(0,4500)}\n"""\n`:'';
 
   // Section labels and tone based on uso
@@ -1133,6 +1652,17 @@ Formato: HTML semántico con <h3> etiquetado con los indicadores que cubre, <tab
 Responde SOLO el HTML de contenido. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.`,3500));
   setGenStep(3,'done');
 
+  setGenStep(1,'active');
+  if(nk!=='secundaria'){
+    sections.s1=cleanHTML(await callAI(`${baseCtx}${ctxS3()}
+${GEMA_NIVELES.specS1(nk)}
+${FMT}`,1500));
+    const mAv=/<p[^>]*class="gema-aviso"[^>]*>([\s\S]*?)<\/p>/i.exec(sections.s1);
+    state.avisoInd=mAv?mAv[1].replace(/<[^>]+>/g,''):'';
+    if(mAv)sections.s1=sections.s1.replace(mAv[0],'');
+  }else{state.avisoInd='';}
+  setGenStep(1,'done');
+
   setGenStep(2,'active');
   const sp2=GEMA_NIVELES.specS2(nk);
   sections.s2=cleanHTML(await callAI(sp2?`${baseCtx}${ctxS3()}
@@ -1156,13 +1686,6 @@ OBLIGATORIO incluir EXACTAMENTE estas 3 actividades:
 Formato: HTML semántico con <h3> para cada actividad, <ol> para ítems, <p> para instrucciones. SIN estilos inline. Mínimo 300 palabras.
 Responde SOLO el HTML de contenido, sin head ni body. PROHIBIDO incluir etiquetas <style>, <script>, <!DOCTYPE>, <html>, <head> o <body>.`,2000));
   setGenStep(2,'done');
-  setGenStep(1,'active');
-  if(nk!=='secundaria'){
-    sections.s1=cleanHTML(await callAI(`${baseCtx}${ctxS3()}
-${GEMA_NIVELES.specS1(nk)}
-${FMT}`,1500));
-  }
-  setGenStep(1,'done');
 
 
 
@@ -1227,13 +1750,13 @@ Formato: HTML con <table> para la rúbrica. SIN estilos inline. Responde SOLO el
   setGenStep(5,'done');
 
   setGenStep(6,'active');
-  sections.s6=cleanHTML(await callAI(`${baseCtx}${ctxS3()}
+  sections.s6=cleanHTML(await callAI(`${baseCtx}${ctxS3()}${ctxS5()}
 ${GEMA_NIVELES.specS6(nk)}
 ${FMT}`,1200));
   setGenStep(6,'done');
 
   setGenStep(7,'active');
-  sections.s7=cleanHTML(await callAI(`${baseCtx}${ctxS3()}${ctxS4()}
+  sections.s7=cleanHTML(await callAI(`${baseCtx}${ctxS3()}${ctxS4()}${ctxS5()}
 ${GEMA_NIVELES.specS7(nk)}
 ${FMT}`,2500));
   setGenStep(7,'done');
@@ -1258,6 +1781,7 @@ Responde SOLO el HTML de contenido. PROHIBIDO incluir etiquetas <style>, <script
   }
 
   state.generatedSections=sections;
+  try{localStorage.setItem('gema_ultimo',`${f.tema} (${gradoLbl(f.grado)}): `+gemaTexto(sections.s3||'').replace(/\s+/g,' ').slice(0,700));}catch(_){}
   updateProgress(98);
   goTo(5);
   void document.getElementById('screen5').offsetHeight;
@@ -1279,7 +1803,7 @@ function renderModule(sections){
   const esc=(GEMA_NIVELES.PERFILES[nk]||GEMA_NIVELES.PERFILES.segundoCiclo).escalaAuto;
 
   const preview=document.getElementById('modulePreview');
-  preview.innerHTML=`
+  preview.innerHTML=f.tipo==='espanol'?GEMA_ES.renderHTML(sections,f):`
     <div class="mod-cover">
       <div class="mod-cover-logo">MEDUCA Panamá · ${f.region} · ${f.escuela}</div>
       <div class="mod-cover-title">📘 ${f.tema}</div>
@@ -1299,15 +1823,9 @@ function renderModule(sections){
       <div class="mod-content">
         ${sections.s1||`<h4>🎯 ¿Qué vas a aprender?</h4>
         <ul>${f.indicadores.map(ind=>`<li>${ind}</li>`).join('')}</ul>`}
+        ${GEMA_NIVELES.planSemana(nk)}
         <h4>🗺️ ¿Cómo usar este módulo?</h4>
-        <div class="icon-guide">
-          <div class="icon-item"><span class="ico">🎧</span> <strong>Escucha</strong> con atención</div>
-          <div class="icon-item"><span class="ico">✍️</span> <strong>Escribe</strong> o colorea</div>
-          <div class="icon-item"><span class="ico">🗣️</span> <strong>Habla</strong> o repite en voz alta</div>
-          <div class="icon-item"><span class="ico">📖</span> <strong>Lee</strong> con cuidado</div>
-          <div class="icon-item"><span class="ico">🤔</span> <strong>Piensa</strong> antes de responder</div>
-          <div class="icon-item"><span class="ico">✂️</span> <strong>Recorta</strong> o pega</div>
-        </div>
+        <div class="icon-guide">${GEMA_NIVELES.iconos(nk)}</div>
         <p style="margin-top:14px;padding:12px;background:#f0fdf4;border-radius:8px;font-size:13px;">
           ${GEMA_NIVELES.esPequeno(nk)?'💚 <strong>Para la familia:</strong> usted lee las instrucciones y acompaña. Trabajen un día a la vez; lo importante es intentarlo juntos y celebrar cada logro.':'💚 <strong>¡Tú puedes lograrlo!</strong> Lee cada instrucción con calma. Si tienes dudas, pide ayuda a un adulto en casa. ¡Estamos seguros de que lo harás muy bien!'}
         </p>
@@ -1368,6 +1886,8 @@ function renderModule(sections){
   `;
 
   preview.innerHTML=gemaImgs(preview.innerHTML);
+  let av=document.getElementById('gemaAviso');if(av)av.remove();
+  if(state.avisoInd){av=document.createElement('div');av.id='gemaAviso';av.className='alert alert-warn';av.innerHTML='<span class="alert-icon">⚠️</span><div><strong>Revisa el plan:</strong> '+state.avisoInd+' (Este aviso no aparece en el módulo.)</div>';document.getElementById('moduleToolbar').before(av);}
 
   const toolbar=document.getElementById('moduleToolbar');
   toolbar.innerHTML='';
@@ -1411,6 +1931,8 @@ function renderModule(sections){
                 runs.push(new TextRun({text:'',break:1}));
               }else if(tag==='img'){
                 runs.push(imgRun(child));
+              }else if(tag==='span'&&child.classList.contains('gema-emoji')){
+                runs.push(new TextRun({text:child.dataset.e||'',size:72}),new TextRun({text:'',break:1}),new TextRun({text:child.dataset.w||'',size:18}));
               }else if(tag==='span'&&child.classList.contains('trace')){
                 runs.push(new TextRun({text:child.textContent,color:'A6A6A6',size:56,font:'Century Gothic'}));
               }else if(tag==='strong'||tag==='b'){
@@ -1615,7 +2137,8 @@ body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;col
 table{width:100%;border-collapse:collapse;font-size:12px;margin:12px 0;}
 th{background:#fff;color:#000;padding:8px;text-align:left;border:1px solid #000;font-weight:700;}
 td{padding:8px;border:1px solid #000;}
-.gema-img{width:84px;height:84px;display:inline-block;vertical-align:middle;margin:2px;}.gema-draw{display:inline-block;border:2px dashed #000;border-radius:6px;padding:14px 8px;min-width:84px;text-align:center;font-size:11px;line-height:1.3;vertical-align:middle;}.trace{font-family:'Century Gothic','Quicksand',Arial,sans-serif;color:#a6a6a6;font-size:30px;letter-spacing:3px;}.mod-content table{width:100%;border-collapse:collapse;margin:10px 0;}.mod-content th,.mod-content td{border:1px solid #000;background:#fff;color:#000;padding:6px 8px;vertical-align:middle;}.mod-content th{font-weight:700;}
+.gema-img{width:84px;height:84px;display:inline-block;vertical-align:middle;margin:2px;}.gema-draw{display:inline-block;border:2px dashed #000;border-radius:6px;padding:14px 8px;min-width:84px;text-align:center;font-size:11px;line-height:1.3;vertical-align:middle;}.gema-emoji{display:inline-block;font-size:48px;line-height:1.05;text-align:center;border:1px dashed #999;border-radius:6px;padding:4px 8px;min-width:84px;vertical-align:middle;}.gema-emoji small{font-size:11px;}.trace{font-family:'Century Gothic','Quicksand',Arial,sans-serif;color:#a6a6a6;font-size:30px;letter-spacing:3px;}.mod-content table{width:100%;border-collapse:collapse;margin:10px 0;}.mod-content th,.mod-content td{border:1px solid #000;background:#fff;color:#000;padding:6px 8px;vertical-align:middle;}.mod-content th{font-weight:700;}
+.sabias{border:1px solid #000;border-radius:8px;padding:10px 12px;margin:12px 0;}.mod-animo{margin-top:14px;padding:12px;background:#f0fdf4;border-radius:8px;font-size:13px;}
 @media print{.mod-section{break-inside:avoid;}}
 </style></head><body>${htmlContent}<footer style="text-align:center;margin-top:40px;font-size:11px;color:#999;border-top:1px solid #eee;padding-top:16px;">GeMA · PanaMentorLabs · ${f.escuela} · MEDUCA Panamá · ${f.anio}</footer></body></html>`;
       downloadBlob(new Blob([fullHtml],{type:'text/html'}),`modulo-${slugify(f.tema)}.html`);
@@ -1636,7 +2159,8 @@ function slugify(str){
 }
 
 function goTo(step){
-  if(step===3)autoNivel();
+  if(step===3){GEMA_ES.autoTipo();autoNivel();}
+  if(step>=2&&step<=4)GEMA_ES.syncUI();
   if(step===4)buildSummary();
   const map={1:'screen1',2:'screen2',3:'screen3',4:'screen4',5:'screen5'};
   showOnly(map[step]);
@@ -1678,7 +2202,7 @@ function setProcessingMsg(msg,sub){
 
 function resetAll(){
   state.generatedSections={};state.fields={};state.extractedText='';
-  state.fileName='';state.fileSize='';
+  state.fileName='';state.fileSize='';state.tipo='';
   document.getElementById('fileInput').value='';
   // API key preserved in localStorage — not cleared on reset
   document.getElementById('fileChipArea').innerHTML='';
